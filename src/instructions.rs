@@ -1,5 +1,5 @@
 use crate::addressing::AddressingMode;
-use crate::Cpu;
+use crate::{Cpu, StatusFlags};
 
 pub struct Instruction {
     pub illegal: bool,
@@ -1951,7 +1951,7 @@ fn iny(cpu: &mut Cpu) -> u8 {
 }
 
 fn jmp(cpu: &mut Cpu) -> u8 {
-    // TODO: Add JMP implementation
+    cpu.pc = cpu.addr_abs;
     0
 }
 
@@ -1961,8 +1961,10 @@ fn jsr(cpu: &mut Cpu) -> u8 {
 }
 
 fn lda(cpu: &mut Cpu) -> u8 {
-    // TODO: Add LDA implementation
-    0
+    cpu.fetch();
+    cpu.a = cpu.fetched_data;
+    cpu.set_zn_flags();
+    1
 }
 
 fn ldx(cpu: &mut Cpu) -> u8 {
@@ -2076,7 +2078,7 @@ fn sei(cpu: &mut Cpu) -> u8 {
 }
 
 fn sta(cpu: &mut Cpu) -> u8 {
-    // TODO: Add STA implementation
+    cpu.write(cpu.addr_abs, cpu.a);
     0
 }
 

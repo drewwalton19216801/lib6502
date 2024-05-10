@@ -48,7 +48,7 @@ pub struct Cpu {
 
     /// Whether illegal instructions are allowed
     pub enable_illegal_opcodes: bool,
-    
+
     /// The current instruction string
     pub current_instruction_string: String,
 }
@@ -336,6 +336,11 @@ impl Cpu {
     #[allow(dead_code)]
     pub fn nmi(&mut self) {
         self.do_interrupt(addresses::NMI_VECTOR);
+    }
+
+    fn set_zn_flags(&mut self) {
+        self.set_flag(StatusFlags::Zero, self.a == 0);
+        self.set_flag(StatusFlags::Negative, self.a & 0x80 != 0);
     }
 
     /// Clock the CPU
