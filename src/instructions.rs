@@ -28,14 +28,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: ora,
     },
     Instruction {
-        illegal: false, opcode: 0x02,
+        illegal: true, opcode: 0x02,
         name: "KIL",
         mode: AddressingMode::Implied,
         cycles: 2,
         function: kil,
     },
     Instruction {
-        illegal: false, opcode: 0x03,
+        illegal: true, opcode: 0x03,
         name: "SLO",
         mode: AddressingMode::IndexedIndirect,
         cycles: 8,
@@ -63,7 +63,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: asl,
     },
     Instruction {
-        illegal: false, opcode: 0x07,
+        illegal: true, opcode: 0x07,
         name: "SLO",
         mode: AddressingMode::ZeroPage,
         cycles: 5,
@@ -91,7 +91,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: asl,
     },
     Instruction {
-        illegal: false, opcode: 0x0B,
+        illegal: true, opcode: 0x0B,
         name: "ANC",
         mode: AddressingMode::Immediate,
         cycles: 2,
@@ -119,7 +119,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: asl,
     },
     Instruction {
-        illegal: false, opcode: 0x0F,
+        illegal: true, opcode: 0x0F,
         name: "SLO",
         mode: AddressingMode::Absolute,
         cycles: 6,
@@ -140,14 +140,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: ora,
     },
     Instruction {
-        illegal: false, opcode: 0x12,
+        illegal: true, opcode: 0x12,
         name: "KIL",
         mode: AddressingMode::Implied,
         cycles: 2,
         function: kil,
     },
     Instruction {
-        illegal: false, opcode: 0x13,
+        illegal: true, opcode: 0x13,
         name: "SLO",
         mode: AddressingMode::IndirectIndexed,
         cycles: 8,
@@ -175,7 +175,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: asl,
     },
     Instruction {
-        illegal: false, opcode: 0x17,
+        illegal: true, opcode: 0x17,
         name: "SLO",
         mode: AddressingMode::ZeroPageX,
         cycles: 6,
@@ -203,7 +203,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: nop,
     },
     Instruction {
-        illegal: false, opcode: 0x1B,
+        illegal: true, opcode: 0x1B,
         name: "SLO",
         mode: AddressingMode::AbsoluteY,
         cycles: 7,
@@ -231,7 +231,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: asl,
     },
     Instruction {
-        illegal: false, opcode: 0x1F,
+        illegal: true, opcode: 0x1F,
         name: "SLO",
         mode: AddressingMode::AbsoluteX,
         cycles: 7,
@@ -252,14 +252,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: and,
     },
     Instruction {
-        illegal: false, opcode: 0x22,
+        illegal: true, opcode: 0x22,
         name: "KIL",
         mode: AddressingMode::Implied,
         cycles: 2,
         function: kil,
     },
     Instruction {
-        illegal: false, opcode: 0x23,
+        illegal: true, opcode: 0x23,
         name: "RLA",
         mode: AddressingMode::IndexedIndirect,
         cycles: 8,
@@ -287,7 +287,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: rol,
     },
     Instruction {
-        illegal: false, opcode: 0x27,
+        illegal: true, opcode: 0x27,
         name: "RLA",
         mode: AddressingMode::ZeroPage,
         cycles: 5,
@@ -315,7 +315,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: rol,
     },
     Instruction {
-        illegal: false, opcode: 0x2B,
+        illegal: true, opcode: 0x2B,
         name: "ANC",
         mode: AddressingMode::Immediate,
         cycles: 2,
@@ -343,7 +343,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: rol,
     },
     Instruction {
-        illegal: false, opcode: 0x2F,
+        illegal: true, opcode: 0x2F,
         name: "RLA",
         mode: AddressingMode::Absolute,
         cycles: 6,
@@ -364,14 +364,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: and,
     },
     Instruction {
-        illegal: false, opcode: 0x32,
+        illegal: true, opcode: 0x32,
         name: "KIL",
         mode: AddressingMode::Implied,
         cycles: 2,
         function: kil,
     },
     Instruction {
-        illegal: false, opcode: 0x33,
+        illegal: true, opcode: 0x33,
         name: "RLA",
         mode: AddressingMode::IndirectIndexed,
         cycles: 8,
@@ -399,7 +399,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: rol,
     },
     Instruction {
-        illegal: false, opcode: 0x37,
+        illegal: true, opcode: 0x37,
         name: "RLA",
         mode: AddressingMode::ZeroPageX,
         cycles: 6,
@@ -427,7 +427,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: nop,
     },
     Instruction {
-        illegal: false, opcode: 0x3B,
+        illegal: true, opcode: 0x3B,
         name: "RLA",
         mode: AddressingMode::AbsoluteY,
         cycles: 7,
@@ -455,7 +455,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: rol,
     },
     Instruction {
-        illegal: false, opcode: 0x3F,
+        illegal: true, opcode: 0x3F,
         name: "RLA",
         mode: AddressingMode::AbsoluteX,
         cycles: 7,
@@ -476,14 +476,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: eor,
     },
     Instruction {
-        illegal: false, opcode: 0x42,
+        illegal: true, opcode: 0x42,
         name: "KIL",
         mode: AddressingMode::Implied,
         cycles: 2,
         function: kil,
     },
     Instruction {
-        illegal: false, opcode: 0x43,
+        illegal: true, opcode: 0x43,
         name: "SRE",
         mode: AddressingMode::IndexedIndirect,
         cycles: 8,
@@ -511,7 +511,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: lsr,
     },
     Instruction {
-        illegal: false, opcode: 0x47,
+        illegal: true, opcode: 0x47,
         name: "SRE",
         mode: AddressingMode::ZeroPage,
         cycles: 5,
@@ -539,7 +539,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: lsr,
     },
     Instruction {
-        illegal: false, opcode: 0x4B,
+        illegal: true, opcode: 0x4B,
         name: "ALR",
         mode: AddressingMode::Immediate,
         cycles: 2,
@@ -567,7 +567,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: lsr,
     },
     Instruction {
-        illegal: false, opcode: 0x4F,
+        illegal: true, opcode: 0x4F,
         name: "SRE",
         mode: AddressingMode::Absolute,
         cycles: 6,
@@ -588,14 +588,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: eor,
     },
     Instruction {
-        illegal: false, opcode: 0x52,
+        illegal: true, opcode: 0x52,
         name: "KIL",
         mode: AddressingMode::Implied,
         cycles: 2,
         function: kil,
     },
     Instruction {
-        illegal: false, opcode: 0x53,
+        illegal: true, opcode: 0x53,
         name: "SRE",
         mode: AddressingMode::IndirectIndexed,
         cycles: 8,
@@ -623,7 +623,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: lsr,
     },
     Instruction {
-        illegal: false, opcode: 0x57,
+        illegal: true, opcode: 0x57,
         name: "SRE",
         mode: AddressingMode::ZeroPageX,
         cycles: 6,
@@ -651,7 +651,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: nop,
     },
     Instruction {
-        illegal: false, opcode: 0x5B,
+        illegal: true, opcode: 0x5B,
         name: "SRE",
         mode: AddressingMode::AbsoluteY,
         cycles: 7,
@@ -679,7 +679,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: lsr,
     },
     Instruction {
-        illegal: false, opcode: 0x5F,
+        illegal: true, opcode: 0x5F,
         name: "SRE",
         mode: AddressingMode::AbsoluteX,
         cycles: 7,
@@ -700,14 +700,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: adc,
     },
     Instruction {
-        illegal: false, opcode: 0x62,
+        illegal: true, opcode: 0x62,
         name: "KIL",
         mode: AddressingMode::Implied,
         cycles: 2,
         function: kil,
     },
     Instruction {
-        illegal: false, opcode: 0x63,
+        illegal: true, opcode: 0x63,
         name: "RRA",
         mode: AddressingMode::IndexedIndirect,
         cycles: 8,
@@ -735,7 +735,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: ror,
     },
     Instruction {
-        illegal: false, opcode: 0x67,
+        illegal: true, opcode: 0x67,
         name: "RRA",
         mode: AddressingMode::ZeroPage,
         cycles: 5,
@@ -763,7 +763,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: ror_a,
     },
     Instruction {
-        illegal: false, opcode: 0x6B,
+        illegal: true, opcode: 0x6B,
         name: "ARR",
         mode: AddressingMode::Immediate,
         cycles: 2,
@@ -791,7 +791,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: ror,
     },
     Instruction {
-        illegal: false, opcode: 0x6F,
+        illegal: true, opcode: 0x6F,
         name: "RRA",
         mode: AddressingMode::Absolute,
         cycles: 6,
@@ -812,14 +812,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: adc,
     },
     Instruction {
-        illegal: false, opcode: 0x72,
+        illegal: true, opcode: 0x72,
         name: "KIL",
         mode: AddressingMode::Implied,
         cycles: 2,
         function: kil,
     },
     Instruction {
-        illegal: false, opcode: 0x73,
+        illegal: true, opcode: 0x73,
         name: "RRA",
         mode: AddressingMode::IndirectIndexed,
         cycles: 8,
@@ -847,7 +847,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: ror,
     },
     Instruction {
-        illegal: false, opcode: 0x77,
+        illegal: true, opcode: 0x77,
         name: "RRA",
         mode: AddressingMode::ZeroPageX,
         cycles: 6,
@@ -875,7 +875,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: nop,
     },
     Instruction {
-        illegal: false, opcode: 0x7B,
+        illegal: true, opcode: 0x7B,
         name: "RRA",
         mode: AddressingMode::AbsoluteY,
         cycles: 7,
@@ -903,7 +903,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: ror,
     },
     Instruction {
-        illegal: false, opcode: 0x7F,
+        illegal: true, opcode: 0x7F,
         name: "RRA",
         mode: AddressingMode::AbsoluteX,
         cycles: 7,
@@ -931,7 +931,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: nop,
     },
     Instruction {
-        illegal: false, opcode: 0x83,
+        illegal: true, opcode: 0x83,
         name: "SAX",
         mode: AddressingMode::IndexedIndirect,
         cycles: 6,
@@ -959,7 +959,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: stx,
     },
     Instruction {
-        illegal: false, opcode: 0x87,
+        illegal: true, opcode: 0x87,
         name: "SAX",
         mode: AddressingMode::ZeroPage,
         cycles: 3,
@@ -987,7 +987,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: txa,
     },
     Instruction {
-        illegal: false, opcode: 0x8B,
+        illegal: true, opcode: 0x8B,
         name: "XAA",
         mode: AddressingMode::Immediate,
         cycles: 2,
@@ -1015,7 +1015,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: stx,
     },
     Instruction {
-        illegal: false, opcode: 0x8F,
+        illegal: true, opcode: 0x8F,
         name: "SAX",
         mode: AddressingMode::Absolute,
         cycles: 4,
@@ -1036,14 +1036,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: sta,
     },
     Instruction {
-        illegal: false, opcode: 0x92,
+        illegal: true, opcode: 0x92,
         name: "KIL",
         mode: AddressingMode::Implied,
         cycles: 2,
         function: kil,
     },
     Instruction {
-        illegal: false, opcode: 0x93,
+        illegal: true, opcode: 0x93,
         name: "AHX",
         mode: AddressingMode::IndirectIndexed,
         cycles: 6,
@@ -1071,7 +1071,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: stx,
     },
     Instruction {
-        illegal: false, opcode: 0x97,
+        illegal: true, opcode: 0x97,
         name: "SAX",
         mode: AddressingMode::ZeroPageY,
         cycles: 4,
@@ -1099,14 +1099,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: txs,
     },
     Instruction {
-        illegal: false, opcode: 0x9B,
+        illegal: true, opcode: 0x9B,
         name: "TAS",
         mode: AddressingMode::AbsoluteY,
         cycles: 5,
         function: tas,
     },
     Instruction {
-        illegal: false, opcode: 0x9C,
+        illegal: true, opcode: 0x9C,
         name: "SHY",
         mode: AddressingMode::AbsoluteX,
         cycles: 5,
@@ -1120,14 +1120,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: sta,
     },
     Instruction {
-        illegal: false, opcode: 0x9E,
+        illegal: true, opcode: 0x9E,
         name: "SHX",
         mode: AddressingMode::AbsoluteY,
         cycles: 5,
         function: shx,
     },
     Instruction {
-        illegal: false, opcode: 0x9F,
+        illegal: true, opcode: 0x9F,
         name: "AHX",
         mode: AddressingMode::AbsoluteY,
         cycles: 5,
@@ -1155,7 +1155,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: ldx,
     },
     Instruction {
-        illegal: false, opcode: 0xA3,
+        illegal: true, opcode: 0xA3,
         name: "LAX",
         mode: AddressingMode::IndexedIndirect,
         cycles: 6,
@@ -1183,7 +1183,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: ldx,
     },
     Instruction {
-        illegal: false, opcode: 0xA7,
+        illegal: true, opcode: 0xA7,
         name: "LAX",
         mode: AddressingMode::ZeroPage,
         cycles: 3,
@@ -1211,7 +1211,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: tax,
     },
     Instruction {
-        illegal: false, opcode: 0xAB,
+        illegal: true, opcode: 0xAB,
         name: "LAX",
         mode: AddressingMode::Immediate,
         cycles: 2,
@@ -1239,7 +1239,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: ldx,
     },
     Instruction {
-        illegal: false, opcode: 0xAF,
+        illegal: true, opcode: 0xAF,
         name: "LAX",
         mode: AddressingMode::Absolute,
         cycles: 4,
@@ -1260,14 +1260,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: lda,
     },
     Instruction {
-        illegal: false, opcode: 0xB2,
+        illegal: true, opcode: 0xB2,
         name: "KIL",
         mode: AddressingMode::Implied,
         cycles: 2,
         function: kil,
     },
     Instruction {
-        illegal: false, opcode: 0xB3,
+        illegal: true, opcode: 0xB3,
         name: "LAX",
         mode: AddressingMode::IndirectIndexed,
         cycles: 5,
@@ -1295,7 +1295,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: ldx,
     },
     Instruction {
-        illegal: false, opcode: 0xB7,
+        illegal: true, opcode: 0xB7,
         name: "LAX",
         mode: AddressingMode::ZeroPageY,
         cycles: 4,
@@ -1323,7 +1323,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: tsx,
     },
     Instruction {
-        illegal: false, opcode: 0xBB,
+        illegal: true, opcode: 0xBB,
         name: "LAS",
         mode: AddressingMode::AbsoluteY,
         cycles: 4,
@@ -1351,7 +1351,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: ldx,
     },
     Instruction {
-        illegal: false, opcode: 0xBF,
+        illegal: true, opcode: 0xBF,
         name: "LAX",
         mode: AddressingMode::AbsoluteY,
         cycles: 4,
@@ -1379,7 +1379,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: nop,
     },
     Instruction {
-        illegal: false, opcode: 0xC3,
+        illegal: true, opcode: 0xC3,
         name: "DCP",
         mode: AddressingMode::IndexedIndirect,
         cycles: 8,
@@ -1407,7 +1407,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: dec,
     },
     Instruction {
-        illegal: false, opcode: 0xC7,
+        illegal: true, opcode: 0xC7,
         name: "DCP",
         mode: AddressingMode::ZeroPage,
         cycles: 5,
@@ -1435,7 +1435,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: dex,
     },
     Instruction {
-        illegal: false, opcode: 0xCB,
+        illegal: true, opcode: 0xCB,
         name: "AXS",
         mode: AddressingMode::Immediate,
         cycles: 2,
@@ -1463,7 +1463,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: dec,
     },
     Instruction {
-        illegal: false, opcode: 0xCF,
+        illegal: true, opcode: 0xCF,
         name: "DCP",
         mode: AddressingMode::Absolute,
         cycles: 6,
@@ -1484,14 +1484,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: cmp,
     },
     Instruction {
-        illegal: false, opcode: 0xD2,
+        illegal: true, opcode: 0xD2,
         name: "KIL",
         mode: AddressingMode::Implied,
         cycles: 2,
         function: kil,
     },
     Instruction {
-        illegal: false, opcode: 0xD3,
+        illegal: true, opcode: 0xD3,
         name: "DCP",
         mode: AddressingMode::IndirectIndexed,
         cycles: 8,
@@ -1519,7 +1519,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: dec,
     },
     Instruction {
-        illegal: false, opcode: 0xD7,
+        illegal: true, opcode: 0xD7,
         name: "DCP",
         mode: AddressingMode::ZeroPageX,
         cycles: 6,
@@ -1547,7 +1547,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: nop,
     },
     Instruction {
-        illegal: false, opcode: 0xDB,
+        illegal: true, opcode: 0xDB,
         name: "DCP",
         mode: AddressingMode::AbsoluteY,
         cycles: 7,
@@ -1603,7 +1603,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: nop,
     },
     Instruction {
-        illegal: false, opcode: 0xE3,
+        illegal: true, opcode: 0xE3,
         name: "ISC",
         mode: AddressingMode::IndexedIndirect,
         cycles: 8,
@@ -1631,7 +1631,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: inc,
     },
     Instruction {
-        illegal: false, opcode: 0xE7,
+        illegal: true, opcode: 0xE7,
         name: "ISC",
         mode: AddressingMode::ZeroPage,
         cycles: 5,
@@ -1687,7 +1687,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: inc,
     },
     Instruction {
-        illegal: false, opcode: 0xEF,
+        illegal: true, opcode: 0xEF,
         name: "ISC",
         mode: AddressingMode::Absolute,
         cycles: 6,
@@ -1708,14 +1708,14 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: sbc,
     },
     Instruction {
-        illegal: false, opcode: 0xF2,
+        illegal: true, opcode: 0xF2,
         name: "KIL",
         mode: AddressingMode::Implied,
         cycles: 2,
         function: kil,
     },
     Instruction {
-        illegal: false, opcode: 0xF3,
+        illegal: true, opcode: 0xF3,
         name: "ISC",
         mode: AddressingMode::IndirectIndexed,
         cycles: 8,
@@ -1743,7 +1743,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: inc,
     },
     Instruction {
-        illegal: false, opcode: 0xF7,
+        illegal: true, opcode: 0xF7,
         name: "ISC",
         mode: AddressingMode::ZeroPageX,
         cycles: 6,
@@ -1771,7 +1771,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: nop,
     },
     Instruction {
-        illegal: false, opcode: 0xFB,
+        illegal: true, opcode: 0xFB,
         name: "ISC",
         mode: AddressingMode::AbsoluteY,
         cycles: 7,
@@ -1799,7 +1799,7 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
         function: inc,
     },
     Instruction {
-        illegal: false, opcode: 0xFF,
+        illegal: true, opcode: 0xFF,
         name: "ISC",
         mode: AddressingMode::AbsoluteX,
         cycles: 7,
@@ -2113,7 +2113,6 @@ fn tya(cpu: &mut Cpu) -> bool {
 }
 
 /** Illegal instructions */
-
 fn ahx(cpu: &mut Cpu) -> bool {
     // TODO: Add AHX implementation
     false
