@@ -6,6 +6,8 @@
 //! on the bus. The CPU can then read and write to these devices.
 
 mod addresses;
+/// The bus module
+pub mod bus;
 
 use bitflags::bitflags;
 use crate::addresses::RESET_VECTOR;
@@ -35,28 +37,20 @@ bitflags! {
     pub struct StatusFlags: u8 {
         /// No flags
         const None = 0b0000_0000;
-
         /// Carry flag
         const Carry = 0b0000_0001;
-
         /// Zero flag
         const Zero = 0b0000_0010;
-
         /// Interrupt disable flag
         const InterruptDisable = 0b0000_0100;
-
         /// Decimal mode flag
         const Decimal = 0b0000_1000;
-
         /// Break flag
         const Break = 0b0001_0000;
-
         /// Unused flag
         const Unused = 0b0010_0000;
-
         /// Overflow flag
         const Overflow = 0b0100_0000;
-
         /// Negative flag
         const Negative = 0b1000_0000;
     }
