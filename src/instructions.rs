@@ -8,7 +8,7 @@ pub struct Instruction {
     pub mode: AddressingMode,
     pub cycles: u8,
     // Function pointer to the instruction's implementation
-    pub function: fn(cpu: &mut Cpu) -> bool,
+    pub function: fn(cpu: &mut Cpu) -> u8,
 }
 
 /// List of all 6502 instructions
@@ -1807,403 +1807,411 @@ pub const INSTRUCTION_LIST: [Instruction; 256] = [
     },
 ];
 
-fn adc(cpu: &mut Cpu) -> bool {
+pub fn get_cycles(opcode: u8) -> u8 {
+    INSTRUCTION_LIST[opcode as usize].cycles
+}
+
+pub fn get_addr_mode(opcode: u8) -> AddressingMode {
+    INSTRUCTION_LIST[opcode as usize].mode
+}
+
+fn adc(cpu: &mut Cpu) -> u8 {
     // TODO: Add ADC implementation
-    false
+    0
 }
 
-fn and(cpu: &mut Cpu) -> bool {
+fn and(cpu: &mut Cpu) -> u8 {
     // TODO: Add AND implementation
-    false
+    0
 }
 
-fn asl(cpu: &mut Cpu) -> bool {
+fn asl(cpu: &mut Cpu) -> u8 {
     // TODO: Add ASL implementation
-    false
+    0
 }
 
-fn bcc(cpu: &mut Cpu) -> bool {
+fn bcc(cpu: &mut Cpu) -> u8 {
     // TODO: Add BCC implementation
-    false
+    0
 }
 
-fn bcs(cpu: &mut Cpu) -> bool {
+fn bcs(cpu: &mut Cpu) -> u8 {
     // TODO: Add BCS implementation
-    false
+    0
 }
 
-fn beq(cpu: &mut Cpu) -> bool {
+fn beq(cpu: &mut Cpu) -> u8 {
     // TODO: Add BEQ implementation
-    false
+    0
 }
 
-fn bit(cpu: &mut Cpu) -> bool {
+fn bit(cpu: &mut Cpu) -> u8 {
     // TODO: Add BIT implementation
-    false
+    0
 }
 
-fn bmi(cpu: &mut Cpu) -> bool {
+fn bmi(cpu: &mut Cpu) -> u8 {
     // TODO: Add BMI implementation
-    false
+    0
 }
 
-fn bne(cpu: &mut Cpu) -> bool {
+fn bne(cpu: &mut Cpu) -> u8 {
     // TODO: Add BNE implementation
-    false
+    0
 }
 
-fn bpl(cpu: &mut Cpu) -> bool {
+fn bpl(cpu: &mut Cpu) -> u8 {
     // TODO: Add BPL implementation
-    false
+    0
 }
 
-fn brk(cpu: &mut Cpu) -> bool {
+fn brk(cpu: &mut Cpu) -> u8 {
     // TODO: Add BRK implementation
-    false
+    0
 }
 
-fn bvc(cpu: &mut Cpu) -> bool {
+fn bvc(cpu: &mut Cpu) -> u8 {
     // TODO: Add BVC implementation
-    false
+    0
 }
 
-fn bvs(cpu: &mut Cpu) -> bool {
+fn bvs(cpu: &mut Cpu) -> u8 {
     // TODO: Add BVS implementation
-    false
+    0
 }
 
-fn clc(cpu: &mut Cpu) -> bool {
+fn clc(cpu: &mut Cpu) -> u8 {
     // TODO: Add CLC implementation
-    false
+    0
 }
 
-fn cld(cpu: &mut Cpu) -> bool {
+fn cld(cpu: &mut Cpu) -> u8 {
     // TODO: Add CLD implementation
-    false
+    0
 }
 
-fn cli(cpu: &mut Cpu) -> bool {
+fn cli(cpu: &mut Cpu) -> u8 {
     // TODO: Add CLI implementation
-    false
+    0
 }
 
-fn clv(cpu: &mut Cpu) -> bool {
+fn clv(cpu: &mut Cpu) -> u8 {
     // TODO: Add CLV implementation
-    false
+    0
 }
 
-fn cmp(cpu: &mut Cpu) -> bool {
+fn cmp(cpu: &mut Cpu) -> u8 {
     // TODO: Add CMP implementation
-    false
+    0
 }
 
-fn cpx(cpu: &mut Cpu) -> bool {
+fn cpx(cpu: &mut Cpu) -> u8 {
     // TODO: Add CPX implementation
-    false
+    0
 }
 
-fn cpy(cpu: &mut Cpu) -> bool {
+fn cpy(cpu: &mut Cpu) -> u8 {
     // TODO: Add CPY implementation
-    false
+    0
 }
 
-fn dec(cpu: &mut Cpu) -> bool {
+fn dec(cpu: &mut Cpu) -> u8 {
     // TODO: Add DEC implementation
-    false
+    0
 }
 
-fn dex(cpu: &mut Cpu) -> bool {
+fn dex(cpu: &mut Cpu) -> u8 {
     // TODO: Add DEX implementation
-    false
+    0
 }
 
-fn dey(cpu: &mut Cpu) -> bool {
+fn dey(cpu: &mut Cpu) -> u8 {
     // TODO: Add DEY implementation
-    false
+    0
 }
 
-fn eor(cpu: &mut Cpu) -> bool {
+fn eor(cpu: &mut Cpu) -> u8 {
     // TODO: Add EOR implementation
-    false
+    0
 }
 
-fn inc(cpu: &mut Cpu) -> bool {
+fn inc(cpu: &mut Cpu) -> u8 {
     // TODO: Add INC implementation
-    false
+    0
 }
 
-fn inx(cpu: &mut Cpu) -> bool {
+fn inx(cpu: &mut Cpu) -> u8 {
     // TODO: Add INX implementation
-    false
+    0
 }
 
-fn iny(cpu: &mut Cpu) -> bool {
+fn iny(cpu: &mut Cpu) -> u8 {
     // TODO: Add INY implementation
-    false
+    0
 }
 
-fn jmp(cpu: &mut Cpu) -> bool {
+fn jmp(cpu: &mut Cpu) -> u8 {
     // TODO: Add JMP implementation
-    false
+    0
 }
 
-fn jsr(cpu: &mut Cpu) -> bool {
+fn jsr(cpu: &mut Cpu) -> u8 {
     // TODO: Add JSR implementation
-    false
+    0
 }
 
-fn lda(cpu: &mut Cpu) -> bool {
+fn lda(cpu: &mut Cpu) -> u8 {
     // TODO: Add LDA implementation
-    false
+    0
 }
 
-fn ldx(cpu: &mut Cpu) -> bool {
+fn ldx(cpu: &mut Cpu) -> u8 {
     // TODO: Add LDX implementation
-    false
+    0
 }
 
-fn ldy(cpu: &mut Cpu) -> bool {
+fn ldy(cpu: &mut Cpu) -> u8 {
     // TODO: Add LDY implementation
-    false
+    0
 }
 
-fn lsr(cpu: &mut Cpu) -> bool {
+fn lsr(cpu: &mut Cpu) -> u8 {
     // TODO: Add LSR implementation
-    false
+    0
 }
 
-fn nop(cpu: &mut Cpu) -> bool {
+fn nop(cpu: &mut Cpu) -> u8 {
     // TODO: Add NOP implementation
-    false
+    0
 }
 
-fn ora(cpu: &mut Cpu) -> bool {
+fn ora(cpu: &mut Cpu) -> u8 {
     // TODO: Add ORA implementation
-    false
+    0
 }
 
-fn pha(cpu: &mut Cpu) -> bool {
+fn pha(cpu: &mut Cpu) -> u8 {
     // TODO: Add PHA implementation
-    false
+    0
 }
 
-fn php(cpu: &mut Cpu) -> bool {
+fn php(cpu: &mut Cpu) -> u8 {
     // TODO: Add PHP implementation
-    false
+    0
 }
 
-fn pla(cpu: &mut Cpu) -> bool {
+fn pla(cpu: &mut Cpu) -> u8 {
     // TODO: Add PLA implementation
-    false
+    0
 }
 
-fn plp(cpu: &mut Cpu) -> bool {
+fn plp(cpu: &mut Cpu) -> u8 {
     // TODO: Add PLP implementation
-    false
+    0
 }
 
-fn rol(cpu: &mut Cpu) -> bool {
+fn rol(cpu: &mut Cpu) -> u8 {
     // TODO: Add ROL implementation
-    false
+    0
 }
 
-fn ror_a(cpu: &mut Cpu) -> bool {
+fn ror_a(cpu: &mut Cpu) -> u8 {
     // TODO: Add ROR implementation
-    false
+    0
 }
 
-fn ror(cpu: &mut Cpu) -> bool {
+fn ror(cpu: &mut Cpu) -> u8 {
     // TODO: Add ROR implementation
-    false
+    0
 }
 
-fn ror_a_nmos(cpu: &mut Cpu) -> bool {
+fn ror_a_nmos(cpu: &mut Cpu) -> u8 {
     // TODO: Add ROR implementation
-    false
+    0
 }
 
-fn ror_a_cmos(cpu: &mut Cpu) -> bool {
+fn ror_a_cmos(cpu: &mut Cpu) -> u8 {
     // TODO: Add ROR implementation
-    false
+    0
 }
 
-fn ror_nmos(cpu: &mut Cpu) -> bool {
+fn ror_nmos(cpu: &mut Cpu) -> u8 {
     // TODO: Add ROR implementation
-    false
+    0
 }
 
-fn ror_cmos(cpu: &mut Cpu) -> bool {
+fn ror_cmos(cpu: &mut Cpu) -> u8 {
     // TODO: Add ROR implementation
-    false
+    0
 }
 
-fn rti(cpu: &mut Cpu) -> bool {
+fn rti(cpu: &mut Cpu) -> u8 {
     // TODO: Add RTI implementation
-    false
+    0
 }
 
-fn rts(cpu: &mut Cpu) -> bool {
+fn rts(cpu: &mut Cpu) -> u8 {
     // TODO: Add RTS implementation
-    false
+    0
 }
 
-fn sbc(cpu: &mut Cpu) -> bool {
+fn sbc(cpu: &mut Cpu) -> u8 {
     // TODO: Add SBC implementation
-    false
+    0
 }
 
-fn sec(cpu: &mut Cpu) -> bool {
+fn sec(cpu: &mut Cpu) -> u8 {
     // TODO: Add SEC implementation
-    false
+    0
 }
 
-fn sed(cpu: &mut Cpu) -> bool {
+fn sed(cpu: &mut Cpu) -> u8 {
     // TODO: Add SED implementation
-    false
+    0
 }
 
-fn sei(cpu: &mut Cpu) -> bool {
+fn sei(cpu: &mut Cpu) -> u8 {
     // TODO: Add SEI implementation
-    false
+    0
 }
 
-fn sta(cpu: &mut Cpu) -> bool {
+fn sta(cpu: &mut Cpu) -> u8 {
     // TODO: Add STA implementation
-    false
+    0
 }
 
-fn stx(cpu: &mut Cpu) -> bool {
+fn stx(cpu: &mut Cpu) -> u8 {
     // TODO: Add STX implementation
-    false
+    0
 }
 
-fn sty(cpu: &mut Cpu) -> bool {
+fn sty(cpu: &mut Cpu) -> u8 {
     // TODO: Add STY implementation
-    false
+    0
 }
 
-fn tax(cpu: &mut Cpu) -> bool {
+fn tax(cpu: &mut Cpu) -> u8 {
     // TODO: Add TAX implementation
-    false
+    0
 }
 
-fn tay(cpu: &mut Cpu) -> bool {
+fn tay(cpu: &mut Cpu) -> u8 {
     // TODO: Add TAY implementation
-    false
+    0
 }
 
-fn tsx(cpu: &mut Cpu) -> bool {
+fn tsx(cpu: &mut Cpu) -> u8 {
     // TODO: Add TSX implementation
-    false
+    0
 }
 
-fn txa(cpu: &mut Cpu) -> bool {
+fn txa(cpu: &mut Cpu) -> u8 {
     // TODO: Add TXA implementation
-    false
+    0
 }
 
-fn txs(cpu: &mut Cpu) -> bool {
+fn txs(cpu: &mut Cpu) -> u8 {
     // TODO: Add TXS implementation
-    false
+    0
 }
 
-fn tya(cpu: &mut Cpu) -> bool {
+fn tya(cpu: &mut Cpu) -> u8 {
     // TODO: Add TYA implementation
-    false
+    0
 }
 
 /** Illegal instructions */
-fn ahx(cpu: &mut Cpu) -> bool {
+fn ahx(cpu: &mut Cpu) -> u8 {
     // TODO: Add AHX implementation
-    false
+    0
 }
 
-fn alr(cpu: &mut Cpu) -> bool {
+fn alr(cpu: &mut Cpu) -> u8 {
     // TODO: Add ALR implementation
-    false
+    0
 }
 
-fn anc(cpu: &mut Cpu) -> bool {
+fn anc(cpu: &mut Cpu) -> u8 {
     // TODO: Add ANC implementation
-    false
+    0
 }
 
-fn arr(cpu: &mut Cpu) -> bool {
+fn arr(cpu: &mut Cpu) -> u8 {
     // TODO: Add ARR implementation
-    false
+    0
 }
 
-fn axs(cpu: &mut Cpu) -> bool {
+fn axs(cpu: &mut Cpu) -> u8 {
     // TODO: Add AXS implementation
-    false
+    0
 }
 
-fn dcp(cpu: &mut Cpu) -> bool {
+fn dcp(cpu: &mut Cpu) -> u8 {
     // TODO: Add DCP implementation
-    false
+    0
 }
 
-fn isc(cpu: &mut Cpu) -> bool {
+fn isc(cpu: &mut Cpu) -> u8 {
     // TODO: Add ISC implementation
-    false
+    0
 }
 
-fn kil(cpu: &mut Cpu) -> bool {
+fn kil(cpu: &mut Cpu) -> u8 {
     // TODO: Add KIL implementation
-    false
+    0
 }
 
-fn las(cpu: &mut Cpu) -> bool {
+fn las(cpu: &mut Cpu) -> u8 {
     // TODO: Add LAS implementation
-    false
+    0
 }
 
-fn lax(cpu: &mut Cpu) -> bool {
+fn lax(cpu: &mut Cpu) -> u8 {
     // TODO: Add LAX implementation
-    false
+    0
 }
 
-fn rla(cpu: &mut Cpu) -> bool {
+fn rla(cpu: &mut Cpu) -> u8 {
     // TODO: Add RLA implementation
-    false
+    0
 }
 
-fn rra(cpu: &mut Cpu) -> bool {
+fn rra(cpu: &mut Cpu) -> u8 {
     // TODO: Add RRA implementation
-    false
+    0
 }
 
-fn sax(cpu: &mut Cpu) -> bool {
+fn sax(cpu: &mut Cpu) -> u8 {
     // TODO: Add SAX implementation
-    false
+    0
 }
 
-fn shx(cpu: &mut Cpu) -> bool {
+fn shx(cpu: &mut Cpu) -> u8 {
     // TODO: Add SHX implementation
-    false
+    0
 }
 
-fn shy(cpu: &mut Cpu) -> bool {
+fn shy(cpu: &mut Cpu) -> u8 {
     // TODO: Add SHY implementation
-    false
+    0
 }
 
-fn slo(cpu: &mut Cpu) -> bool {
+fn slo(cpu: &mut Cpu) -> u8 {
     // TODO: Add SLO implementation
-    false
+    0
 }
 
-fn sre(cpu: &mut Cpu) -> bool {
+fn sre(cpu: &mut Cpu) -> u8 {
     // TODO: Add SRE implementation
-    false
+    0
 }
 
-fn tas(cpu: &mut Cpu) -> bool {
+fn tas(cpu: &mut Cpu) -> u8 {
     // TODO: Add TAS implementation
-    false
+    0
 }
 
-fn xaa(cpu: &mut Cpu) -> bool {
+fn xaa(cpu: &mut Cpu) -> u8 {
     // TODO: Add XAA implementation
-    false
+    0
 }

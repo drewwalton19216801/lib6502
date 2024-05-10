@@ -15,6 +15,7 @@ use bitflags::bitflags;
 use crate::addresses::RESET_VECTOR;
 use crate::addressing::AddressingMode;
 use crate::bus::Bus;
+use crate::instructions::INSTRUCTION_LIST;
 
 /// The emulated 6502 CPU
 pub struct Cpu {
@@ -39,9 +40,17 @@ pub struct Cpu {
     opcode: u8,
     fetched_data: u8,
 
-    /// The memory of the CPU
-    // TODO: Make this a bus that the CPU can connect to
+    /// The bus that the CPU is connected to
     pub bus: Box<dyn Bus>,
+
+    /// The variant of the CPU
+    pub variant: Variant,
+
+    /// Whether illegal instructions are allowed
+    pub enable_illegal_opcodes: bool,
+    
+    /// The current instruction string
+    pub current_instruction_string: String,
 }
 
 bitflags! {
@@ -68,6 +77,40 @@ bitflags! {
     }
 }
 
+/// CPU variants
+#[derive(Clone, Copy, PartialEq)]
+pub enum Variant {
+    /// Modified 65C02 (no ROR bug)
+    CMOS,
+    /// Modified 2A03 (no decimal mode)
+    NES,
+    /// Original 6502 (with ROR bug)
+    NMOS,
+}
+
+/// Variant implementation
+#[allow(dead_code)]
+impl Variant {
+    /// Returns a new Variant from a string
+    pub fn from_string(variant: String) -> Self {
+        match variant.as_str() {
+            "NMOS" => return Self::NMOS,
+            "CMOS" => return Self::CMOS,
+            "NES" => return Self::NES,
+            _ => panic!("Invalid CPU variant"),
+        }
+    }
+
+    /// Returns a string representation of the variant
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::NMOS => return String::from("NMOS"),
+            Self::CMOS => return String::from("CMOS"),
+            Self::NES => return String::from("NES"),
+        }
+    }
+}
+
 impl Cpu {
     /// Create a new CPU
     pub fn new(bus: Box<dyn Bus>) -> Cpu {
@@ -85,7 +128,11 @@ impl Cpu {
             addr_mode: AddressingMode::None,
             opcode: 0,
             fetched_data: 0,
-            bus
+            bus,
+
+            variant: Variant::CMOS,
+            enable_illegal_opcodes: false,
+            current_instruction_string: String::new(),
         }
     }
 
@@ -97,6 +144,8 @@ impl Cpu {
         self.sp = 0xfd;
         self.pc = self.read_u16(RESET_VECTOR);
         self.status = StatusFlags::None.bits() | StatusFlags::Unused.bits() | StatusFlags::InterruptDisable.bits();
+        self.cycles = 8;
+        self.current_instruction_string = "RESET".to_string();
     }
 
     /// Read a byte from memory
@@ -114,6 +163,194 @@ impl Cpu {
     /// Write a byte to memory
     pub fn write(&mut self, address: u16, value: u8) {
         self.bus.write(address, value)
+    }
+
+    /// Write a 16-bit word to memory
+    pub fn write_u16(&mut self, address: u16, value: u16) {
+        self.write(address, (value & 0xff) as u8);
+        self.write(address + 1, ((value >> 8) & 0xff) as u8);
+    }
+
+    fn set_flag(&mut self, flag: StatusFlags, value: bool) {
+        if value {
+            self.status |= flag.bits();
+        } else {
+            self.status &= !flag.bits();
+        }
+    }
+
+    fn get_flag(&self, flag: StatusFlags) -> bool {
+        (self.status & flag.bits()) != 0
+    }
+
+    fn increment_sp(&mut self) {
+        self.sp = self.sp.wrapping_add(1);
+    }
+
+    fn decrement_sp(&mut self) {
+        self.sp = self.sp.wrapping_sub(1);
+    }
+
+    /// Set the CPU variant
+    pub fn change_variant(&mut self, variant: Variant) {
+        self.variant = variant;
+    }
+
+    /// Set the enable_illegal_opcodes flag
+    pub fn set_illegal_opcodes(&mut self, value: bool) {
+        self.enable_illegal_opcodes = value;
+    }
+
+    fn get_status_string(&self) -> String {
+        let mut status = String::new();
+        status.push_str("STATUS: ");
+        status.push_str(if self.get_flag(StatusFlags::Negative) {
+            "N"
+        } else {
+            "n"
+        });
+        status.push_str(if self.get_flag(StatusFlags::Overflow) {
+            "V"
+        } else {
+            "v"
+        });
+        status.push_str("-");
+        status.push_str(if self.get_flag(StatusFlags::Break) {
+            "B"
+        } else {
+            "b"
+        });
+        status.push_str(if self.get_flag(StatusFlags::Decimal) {
+            "D"
+        } else {
+            "d"
+        });
+        status.push_str(if self.get_flag(StatusFlags::InterruptDisable) {
+            "I"
+        } else {
+            "i"
+        });
+        status.push_str(if self.get_flag(StatusFlags::Zero) { "Z" } else { "z" });
+        status.push_str(if self.get_flag(StatusFlags::Carry) {
+            "C"
+        } else {
+            "c"
+        });
+        status
+    }
+
+    fn fetch(&mut self) -> u8 {
+        if self.addr_mode != AddressingMode::Implied {
+            self.fetched_data = self.read(self.addr_abs);
+        }
+        self.fetched_data
+    }
+
+    fn push(&mut self, value: u8) {
+        self.write(0x100 + self.sp as u16, value);
+        self.decrement_sp();
+    }
+
+    fn push_word(&mut self, value: u16) {
+        self.push(((value >> 8) & 0xff) as u8);
+        self.push((value & 0xff) as u8);
+    }
+
+    fn pop(&mut self) -> u8 {
+        self.increment_sp();
+        self.read(0x100 + self.sp as u16)
+    }
+
+    fn pop_word(&mut self) -> u16 {
+        let lo = self.pop() as u16;
+        let hi = self.pop() as u16;
+        (hi << 8) | lo
+    }
+
+    fn execute_instruction(&mut self, opcode: u8) -> u8 {
+        let instruction = &INSTRUCTION_LIST[opcode as usize];
+        (instruction.function)(self)
+    }
+
+    fn get_operand_string(&mut self, mode: AddressingMode, address: u16) -> String {
+        match mode {
+            AddressingMode::None => return String::from(""),
+            AddressingMode::Implied => return String::from(""),
+            AddressingMode::Immediate => return format!("#${:02X}", self.read(address)),
+            AddressingMode::ZeroPage => return format!("${:02X}", self.read(address)),
+            AddressingMode::ZeroPageX => return format!("${:02X},X", self.read(address)),
+            AddressingMode::ZeroPageY => return format!("${:02X},Y", self.read(address)),
+            AddressingMode::Relative => return format!("${:02X}", self.read(address)),
+            AddressingMode::Absolute => return format!("${:04X}", self.read_u16(address)),
+            AddressingMode::AbsoluteX => return format!("${:04X},X", self.read_u16(address)),
+            AddressingMode::AbsoluteY => return format!("${:04X},Y", self.read_u16(address)),
+            AddressingMode::Indirect => return format!("(${:04X})", self.read_u16(address)),
+            AddressingMode::IndexedIndirect => return format!("(${:02X},X)", self.read(address)),
+            AddressingMode::IndirectIndexed => return format!("(${:02X}),Y", self.read(address)),
+        }
+    }
+
+    fn disassemble_instruction_at(&mut self, from_pc: u16) -> String {
+        let opcode = self.read(from_pc);
+        let instruction = &INSTRUCTION_LIST[opcode as usize];
+        let addr_mode = instructions::get_addr_mode(opcode);
+        let addr_str = self.get_operand_string(addr_mode, from_pc + 1);
+        format!("{} {}", instruction.name, addr_str)
+    }
+
+    fn execute_addr_mode(&mut self, mode: AddressingMode) -> u8 {
+        self.addr_mode = mode;
+        let extra_cycle = mode.execute(self);
+        if extra_cycle {
+            return 1;
+        }
+        0
+    }
+
+    /// Get the number of cycles for an instruction
+    pub fn get_cycles(&self, opcode: u8) -> u8 {
+        return instructions::get_cycles(opcode);
+    }
+
+    fn do_interrupt(&mut self, vector: u16) {
+        self.push_word(self.pc);
+        self.set_flag(StatusFlags::Break, false);
+        self.set_flag(StatusFlags::Unused, true);
+        self.set_flag(StatusFlags::Break, true);
+        self.set_flag(StatusFlags::InterruptDisable, true);
+        self.push(self.status);
+        self.set_flag(StatusFlags::InterruptDisable, false);
+        self.pc = self.read_u16(vector);
+        self.cycles = 7;
+    }
+
+    /// Interrupt request
+    #[allow(dead_code)]
+    pub fn irq(&mut self) {
+        if !self.get_flag(StatusFlags::InterruptDisable) {
+            self.do_interrupt(addresses::IRQ_VECTOR);
+        }
+    }
+
+    /// Non-maskable interrupt request
+    #[allow(dead_code)]
+    pub fn nmi(&mut self) {
+        self.do_interrupt(addresses::NMI_VECTOR);
+    }
+
+    /// Clock the CPU
+    pub fn clock(&mut self) {
+        if self.cycles == 0 {
+            self.current_instruction_string = self.disassemble_instruction_at(self.pc);
+            self.opcode = self.read(self.pc);
+            self.pc += 1;
+            self.cycles = self.get_cycles(self.opcode);
+            self.addr_mode = instructions::get_addr_mode(self.opcode);
+            let cycles_addr = self.execute_addr_mode(self.addr_mode);
+            let cycles_instruction = self.execute_instruction(self.opcode);
+            self.cycles += cycles_addr + cycles_instruction;
+        }
+        self.cycles -= 1;
     }
 }
 
@@ -165,6 +402,16 @@ mod cpu_tests {
         cpu.write(0x11, 0x30);
 
         assert_eq!(cpu.read_u16(0x10), 0x3020);
+    }
+
+    #[test]
+    fn test_write_u16() {
+        let bus = Box::new(TestBus::new());
+        let mut cpu = Cpu::new(bus);
+        cpu.write_u16(0x10, 0x3020);
+
+        assert_eq!(cpu.read(0x10), 0x20);
+        assert_eq!(cpu.read(0x11), 0x30);
     }
 
     #[test]
