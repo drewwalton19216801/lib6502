@@ -12,15 +12,21 @@ use crate::addresses::RESET_VECTOR;
 
 /// The emulated 6502 CPU
 pub struct Cpu {
-    a: u8,
-    x: u8,
-    y: u8,
-    sp: u8,
-    pc: u16,
-    status: u8,
+    /// The 8-bit accumulator
+    pub a: u8,
+    /// The 8-bit x index register
+    pub x: u8,
+    /// The 8-bit y index register
+    pub y: u8,
+    /// The 8-bit stack pointer
+    pub sp: u8,
+    /// The 16-bit program counter
+    pub pc: u16,
+    /// The status flags
+    pub status: u8,
 
     /// The memory of the CPU
-    /// TODO: Make this a bus that the CPU can connect to
+    // TODO: Make this a bus that the CPU can connect to
     pub memory: Box<[u8]>,
 }
 
