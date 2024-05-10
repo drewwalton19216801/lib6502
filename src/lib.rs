@@ -8,9 +8,12 @@
 mod addresses;
 /// The bus module
 pub mod bus;
+mod addressing;
+mod instructions;
 
 use bitflags::bitflags;
 use crate::addresses::RESET_VECTOR;
+use crate::addressing::AddressingMode;
 use crate::bus::Bus;
 
 /// The emulated 6502 CPU
@@ -27,6 +30,14 @@ pub struct Cpu {
     pub pc: u16,
     /// The status flags
     pub status: u8,
+    /// The number of cycles remaining
+    pub cycles: u8,
+
+    addr_abs: u16,
+    addr_rel: u16,
+    addr_mode: AddressingMode,
+    opcode: u8,
+    fetched_data: u8,
 
     /// The memory of the CPU
     // TODO: Make this a bus that the CPU can connect to
@@ -67,6 +78,13 @@ impl Cpu {
             sp: 0,
             pc: 0,
             status: StatusFlags::None.bits(),
+            cycles: 0,
+
+            addr_abs: 0,
+            addr_rel: 0,
+            addr_mode: AddressingMode::None,
+            opcode: 0,
+            fetched_data: 0,
             bus
         }
     }
@@ -100,7 +118,7 @@ impl Cpu {
 }
 
 #[cfg(test)]
-mod tests {
+mod cpu_tests {
     struct TestBus {
         ram: Vec<u8>,
     }
@@ -137,5 +155,25 @@ mod tests {
         assert_eq!(cpu.a, 0);
         assert_eq!(cpu.x, 0);
         assert_eq!(cpu.y, 0);
+    }
+
+    #[test]
+    fn test_read_u16() {
+        let bus = Box::new(TestBus::new());
+        let mut cpu = Cpu::new(bus);
+        cpu.write(0x10, 0x20);
+        cpu.write(0x11, 0x30);
+
+        assert_eq!(cpu.read_u16(0x10), 0x3020);
+    }
+
+    #[test]
+    fn test_read_write() {
+        let bus = Box::new(TestBus::new());
+        let mut cpu = Cpu::new(bus);
+
+        cpu.write(0x10, 0x20);
+
+        assert_eq!(cpu.read(0x10), 0x20);
     }
 }
