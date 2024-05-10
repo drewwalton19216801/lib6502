@@ -11,6 +11,7 @@ pub mod bus;
 
 use bitflags::bitflags;
 use crate::addresses::RESET_VECTOR;
+use crate::bus::Bus;
 
 /// The emulated 6502 CPU
 pub struct Cpu {
@@ -29,7 +30,7 @@ pub struct Cpu {
 
     /// The memory of the CPU
     // TODO: Make this a bus that the CPU can connect to
-    pub memory: Box<[u8]>,
+    pub bus: Box<dyn Bus>,
 }
 
 bitflags! {
@@ -58,7 +59,7 @@ bitflags! {
 
 impl Cpu {
     /// Create a new CPU
-    pub fn new() -> Cpu {
+    pub fn new(bus: Box<dyn Bus>) -> Cpu {
         Cpu {
             a: 0,
             x: 0,
@@ -66,7 +67,7 @@ impl Cpu {
             sp: 0,
             pc: 0,
             status: StatusFlags::None.bits(),
-            memory: Box::new([0; 0x10000]),
+            bus
         }
     }
 
@@ -82,7 +83,7 @@ impl Cpu {
 
     /// Read a byte from memory
     pub fn read(&self, address: u16) -> u8 {
-        self.memory[address as usize]
+        self.bus.read(address)
     }
 
     /// Read a 16-bit word from memory
@@ -94,19 +95,43 @@ impl Cpu {
 
     /// Write a byte to memory
     pub fn write(&mut self, address: u16, value: u8) {
-        self.memory[address as usize] = value
+        self.bus.write(address, value)
     }
 }
 
 #[cfg(test)]
 mod tests {
+    struct TestBus {
+        ram: Vec<u8>,
+    }
+
+    impl TestBus {
+        fn new() -> TestBus {
+            TestBus {
+                ram: vec![0; 0x10000],
+            }
+        }
+    }
+
+    impl Bus for TestBus {
+        fn read(&self, address: u16) -> u8 {
+            self.ram[address as usize]
+        }
+        fn write(&mut self, address: u16, value: u8) {
+            self.ram[address as usize] = value;
+        }
+    }
+
     use super::*;
     #[test]
     fn test_reset() {
-        let mut cpu = Cpu::new();
+        let bus = Box::new(TestBus::new());
+        let mut cpu = Cpu::new(bus);
+        cpu.write(RESET_VECTOR, 0x00);
+        cpu.write(RESET_VECTOR + 1, 0x80);
         cpu.reset();
-        let calculated_pc = cpu.read_u16(RESET_VECTOR);
-        assert_eq!(calculated_pc, cpu.pc);
+
+        assert_eq!(cpu.pc, 0x8000);
         assert_eq!(cpu.status, StatusFlags::None.bits() | StatusFlags::Unused.bits() | StatusFlags::InterruptDisable.bits());
         assert_eq!(cpu.sp, 0xfd);
         assert_eq!(cpu.a, 0);
