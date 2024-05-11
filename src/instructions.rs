@@ -1,5 +1,5 @@
 use crate::addressing::AddressingMode;
-use crate::{Cpu, StatusFlags};
+use crate::Cpu;
 
 pub struct Instruction {
     pub illegal: bool,
