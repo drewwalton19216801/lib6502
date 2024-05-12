@@ -2116,7 +2116,17 @@ fn and(cpu: &mut Cpu) -> u8 {
 }
 
 fn asl(cpu: &mut Cpu) -> u8 {
-    // TODO: Add ASL implementation
+    cpu.fetch();
+    let mut temp = cpu.fetched_data as u16;
+    temp <<= 1;
+    cpu.set_flag(StatusFlags::Carry, (temp & 0xFF00) > 0);
+    cpu.set_flag(StatusFlags::Negative, (temp & 0x80) > 0);
+    cpu.set_flag(StatusFlags::Zero, temp & 0x00FF == 0);
+    if cpu.addr_mode == AddressingMode::Implied {
+        cpu.a = (temp & 0x00FF) as u8;
+    } else {
+        cpu.write(cpu.addr_abs, (temp & 0x00FF) as u8);
+    }
     0
 }
 
@@ -2171,7 +2181,7 @@ fn bvs(cpu: &mut Cpu) -> u8 {
 }
 
 fn clc(cpu: &mut Cpu) -> u8 {
-    // TODO: Add CLC implementation
+    cpu.set_flag(StatusFlags::Carry, false);
     0
 }
 
@@ -2246,7 +2256,8 @@ fn jmp(cpu: &mut Cpu) -> u8 {
 }
 
 fn jsr(cpu: &mut Cpu) -> u8 {
-    // TODO: Add JSR implementation
+    cpu.push_word(cpu.pc - 1);
+    cpu.pc = cpu.addr_abs;
     0
 }
 
@@ -2347,7 +2358,7 @@ fn rti(cpu: &mut Cpu) -> u8 {
 }
 
 fn rts(cpu: &mut Cpu) -> u8 {
-    // TODO: Add RTS implementation
+    cpu.pc = cpu.pop_word() + 1;
     0
 }
 
