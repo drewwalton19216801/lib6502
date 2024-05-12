@@ -366,7 +366,6 @@ impl Cpu {
             self.current_instruction_string = self.disassemble_instruction_at(self.pc);
             if self.debug {
                 println!("CPU insn: {}", self.current_instruction_string);
-                println!("CPU pre-op: {}", self.get_state());
             }
             self.opcode = self.read(self.pc);
             self.pc += 1;
@@ -375,9 +374,6 @@ impl Cpu {
             let cycles_addr = self.execute_addr_mode(self.addr_mode);
             let cycles_instruction = self.execute_instruction(self.opcode);
             self.cycles += cycles_addr + cycles_instruction;
-            if self.debug {
-                println!("CPU post-op: {}", self.get_state());
-            }
         }
         self.cycles -= 1;
     }
