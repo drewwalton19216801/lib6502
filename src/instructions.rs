@@ -2253,18 +2253,22 @@ fn jsr(cpu: &mut Cpu) -> u8 {
 fn lda(cpu: &mut Cpu) -> u8 {
     cpu.fetch();
     cpu.a = cpu.fetched_data;
-    cpu.set_zn_flags();
+    cpu.set_zn_flags("A");
     1
 }
 
 fn ldx(cpu: &mut Cpu) -> u8 {
-    // TODO: Add LDX implementation
-    0
+    cpu.fetch();
+    cpu.x = cpu.fetched_data;
+    cpu.set_zn_flags("X");
+    1
 }
 
 fn ldy(cpu: &mut Cpu) -> u8 {
-    // TODO: Add LDY implementation
-    0
+    cpu.fetch();
+    cpu.y = cpu.fetched_data;
+    cpu.set_zn_flags("Y");
+    1
 }
 
 fn lsr(cpu: &mut Cpu) -> u8 {

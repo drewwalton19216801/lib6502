@@ -345,9 +345,19 @@ impl Cpu {
         self.do_interrupt(addresses::NMI_VECTOR);
     }
 
-    fn set_zn_flags(&mut self) {
-        self.set_flag(StatusFlags::Zero, self.a == 0);
-        self.set_flag(StatusFlags::Negative, self.a & 0x80 != 0);
+    fn get_register(&self, register: &str) -> u8 {
+        match register {
+            "A" => self.a,
+            "X" => self.x,
+            "Y" => self.y,
+            "SP" => self.sp,
+            _ => panic!("Invalid register: {}", register),
+        }
+    }
+
+    fn set_zn_flags(&mut self, register: &str) {
+        self.set_flag(StatusFlags::Zero, self.get_register(register) == 0);
+        self.set_flag(StatusFlags::Negative, self.get_register(register) & 0x80 != 0);
     }
 
     /// Clock the CPU
