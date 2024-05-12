@@ -412,8 +412,13 @@ mod cpu_tests {
         fn write(&mut self, address: u16, value: u8) {
             self.ram[address as usize] = value;
         }
+        fn load(&mut self, path: &str, address: u16) {
+            let mut file = std::fs::File::open(path).unwrap();
+            file.read(&mut self.ram[address as usize..]).unwrap();
+        }
     }
 
+    use std::io::Read;
     use super::*;
     #[test]
     fn test_reset() {
