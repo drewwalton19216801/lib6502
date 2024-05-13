@@ -59,7 +59,7 @@ impl AddressingMode {
                 if (cpu.addr_abs & 0xFF00) != (address & 0xFF00) {
                     return true;
                 }
-                return false;
+                false
             }
             AddressingMode::AbsoluteY => {
                 let address = cpu.read_u16(cpu.pc);
@@ -70,7 +70,7 @@ impl AddressingMode {
                 if (cpu.addr_abs & 0xFF00) != (address & 0xFF00) {
                     return true;
                 }
-                return false;
+                false
             }
             AddressingMode::Immediate => {
                 cpu.addr_abs = cpu.pc;
@@ -88,25 +88,25 @@ impl AddressingMode {
 
                 if addr_lo == 0x00FF {
                     // We crossed a page boundary, so we need to simulate the hardware bug
-                    cpu.addr_abs = (cpu.read(addr & 0xFF00) as u16) << 8 | cpu.read(addr + 0) as u16;
+                    cpu.addr_abs = (cpu.read(addr & 0xFF00) as u16) << 8 | cpu.read(addr) as u16;
                 } else {
-                    cpu.addr_abs = (cpu.read(addr + 1) as u16) << 8 | cpu.read(addr + 0) as u16;
+                    cpu.addr_abs = (cpu.read(addr + 1) as u16) << 8 | cpu.read(addr) as u16;
                 }
                 cpu.pc += 2;
                 false
             }
             AddressingMode::IndexedIndirect => {
                 let temp = cpu.read(cpu.pc);
-                let lo = cpu.read(temp as u16 + cpu.x as u16) & 0x00FF;
-                let hi = cpu.read(temp as u16 + cpu.x as u16 + 1) & 0x00FF;
+                let lo = cpu.read(temp as u16 + cpu.x as u16);
+                let hi = cpu.read(temp as u16 + cpu.x as u16 + 1);
                 cpu.addr_abs = (hi as u16) << 8 | (lo as u16);
                 cpu.pc += 1;
                 false
             }
             AddressingMode::IndirectIndexed => {
                 let temp = cpu.read(cpu.pc);
-                let lo = cpu.read(temp as u16) & 0x00FF;
-                let hi = cpu.read(temp as u16 + 1) & 0x00FF;
+                let lo = cpu.read(temp as u16);
+                let hi = cpu.read(temp as u16 + 1);
                 cpu.addr_abs = (hi as u16) << 8 | (lo as u16);
                 cpu.pc += 1;
 
@@ -114,7 +114,7 @@ impl AddressingMode {
                 if (cpu.addr_abs & 0xFF00) != ((hi as u16) << 8) {
                     return true;
                 }
-                return false;
+                false
             }
             AddressingMode::Relative => {
                 cpu.addr_rel = cpu.read(cpu.pc) as u16;

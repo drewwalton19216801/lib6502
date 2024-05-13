@@ -2147,15 +2147,15 @@ fn do_branch(cpu: &mut Cpu, condition: bool) -> u8 {
 }
 
 fn bcc(cpu: &mut Cpu) -> u8 {
-    return do_branch(cpu, !cpu.get_flag(StatusFlags::Carry));
+    do_branch(cpu, !cpu.get_flag(StatusFlags::Carry))
 }
 
 fn bcs(cpu: &mut Cpu) -> u8 {
-    return do_branch(cpu, cpu.get_flag(StatusFlags::Carry));
+    do_branch(cpu, cpu.get_flag(StatusFlags::Carry))
 }
 
 fn beq(cpu: &mut Cpu) -> u8 {
-    return do_branch(cpu, cpu.get_flag(StatusFlags::Zero));
+    do_branch(cpu, cpu.get_flag(StatusFlags::Zero))
 }
 
 fn bit(cpu: &mut Cpu) -> u8 {
@@ -2168,15 +2168,15 @@ fn bit(cpu: &mut Cpu) -> u8 {
 }
 
 fn bmi(cpu: &mut Cpu) -> u8 {
-    return do_branch(cpu, cpu.get_flag(StatusFlags::Negative));
+    do_branch(cpu, cpu.get_flag(StatusFlags::Negative))
 }
 
 fn bne(cpu: &mut Cpu) -> u8 {
-    return do_branch(cpu, !cpu.get_flag(StatusFlags::Zero));
+    do_branch(cpu, !cpu.get_flag(StatusFlags::Zero))
 }
 
 fn bpl(cpu: &mut Cpu) -> u8 {
-    return do_branch(cpu, !cpu.get_flag(StatusFlags::Negative));
+    do_branch(cpu, !cpu.get_flag(StatusFlags::Negative))
 }
 
 fn brk(cpu: &mut Cpu) -> u8 {
@@ -2191,11 +2191,11 @@ fn brk(cpu: &mut Cpu) -> u8 {
 }
 
 fn bvc(cpu: &mut Cpu) -> u8 {
-    return do_branch(cpu, !cpu.get_flag(StatusFlags::Overflow));
+    do_branch(cpu, !cpu.get_flag(StatusFlags::Overflow))
 }
 
 fn bvs(cpu: &mut Cpu) -> u8 {
-    return do_branch(cpu, cpu.get_flag(StatusFlags::Overflow));
+    do_branch(cpu, cpu.get_flag(StatusFlags::Overflow))
 }
 
 fn clc(cpu: &mut Cpu) -> u8 {
@@ -2268,7 +2268,7 @@ fn dey(cpu: &mut Cpu) -> u8 {
 
 fn eor(cpu: &mut Cpu) -> u8 {
     cpu.fetch();
-    cpu.a = cpu.a ^ cpu.fetched_data;
+    cpu.a ^= cpu.fetched_data;
     cpu.set_zn_flags(cpu.a);
     1
 }
@@ -2394,14 +2394,14 @@ fn rol(cpu: &mut Cpu) -> u8 {
 }
 
 fn ror_a(cpu: &mut Cpu) -> u8 {
-    return match cpu.variant {
+    match cpu.variant {
         Variant::NMOS => ror_a_nmos(cpu),
         _ => ror_a_cmos(cpu),
     }
 }
 
 fn ror(cpu: &mut Cpu) -> u8 {
-    return match cpu.variant {
+    match cpu.variant {
         Variant::NMOS => ror_nmos(cpu),
         _ => ror_cmos(cpu),
     }

@@ -11,6 +11,7 @@ pub mod bus;
 mod addressing;
 mod instructions;
 
+use std::fmt::Display;
 use bitflags::bitflags;
 use crate::addresses::RESET_VECTOR;
 use crate::addressing::AddressingMode;
@@ -91,25 +92,12 @@ pub enum Variant {
     NMOS,
 }
 
-/// Variant implementation
-#[allow(dead_code)]
-impl Variant {
-    /// Returns a new Variant from a string
-    pub fn from_string(variant: String) -> Self {
-        match variant.as_str() {
-            "NMOS" => return Self::NMOS,
-            "CMOS" => return Self::CMOS,
-            "NES" => return Self::NES,
-            _ => panic!("Invalid CPU variant"),
-        }
-    }
-
-    /// Returns a string representation of the variant
-    pub fn to_string(&self) -> String {
+impl Display for Variant {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::NMOS => return String::from("NMOS"),
-            Self::CMOS => return String::from("CMOS"),
-            Self::NES => return String::from("NES"),
+            Self::CMOS => write!(f, "CMOS"),
+            Self::NES => write!(f, "NES"),
+            Self::NMOS => write!(f, "NMOS"),
         }
     }
 }
@@ -208,7 +196,8 @@ impl Cpu {
         self.enable_illegal_opcodes = value;
     }
 
-    fn get_status_string(&self) -> String {
+    /// Get the status string for the CPU (NV-BDIZC)
+    pub fn get_status_string(&self) -> String {
         let mut status = String::new();
         status.push_str("STATUS: ");
         status.push_str(if self.get_flag(StatusFlags::Negative) {
@@ -221,7 +210,7 @@ impl Cpu {
         } else {
             "v"
         });
-        status.push_str("-");
+        status.push('-');
         status.push_str(if self.get_flag(StatusFlags::Break) {
             "B"
         } else {
@@ -280,7 +269,7 @@ impl Cpu {
     }
 
     fn get_operand_string(&mut self, mode: AddressingMode, address: u16) -> String {
-        return match mode {
+        match mode {
             AddressingMode::None => String::from(""),
             AddressingMode::Implied => String::from(""),
             AddressingMode::Immediate => format!("#${:02X}", self.read(address)),
@@ -316,7 +305,7 @@ impl Cpu {
 
     /// Get the number of cycles for an instruction
     pub fn get_cycles(&self, opcode: u8) -> u8 {
-        return instructions::get_cycles(opcode);
+        instructions::get_cycles(opcode)
     }
 
     fn do_interrupt(&mut self, vector: u16) {
@@ -342,8 +331,9 @@ impl Cpu {
     pub fn nmi(&mut self) {
         self.do_interrupt(addresses::NMI_VECTOR);
     }
-
-    fn get_register(&self, register: &str) -> u8 {
+    
+    /// Get the value of a register
+    pub fn get_register(&self, register: &str) -> u8 {
         match register {
             "A" => self.a,
             "X" => self.x,
