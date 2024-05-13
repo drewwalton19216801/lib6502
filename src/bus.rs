@@ -10,3 +10,18 @@ pub trait Bus {
     /// Load a binary file into memory
     fn load(&mut self, path: &str, address: u16);
 }
+
+struct NullBus;
+
+impl Bus for NullBus {
+    fn read(&self, _address: u16) -> u8 {
+        0
+    }
+    fn write(&mut self, _address: u16, _value: u8) {}
+    fn load(&mut self, _path: &str, _address: u16) {}
+}
+
+/// Create a null bus
+pub fn null() -> Box<dyn Bus> {
+    Box::new(NullBus)
+}

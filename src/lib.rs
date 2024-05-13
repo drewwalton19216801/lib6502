@@ -104,7 +104,7 @@ impl Display for Variant {
 
 impl Cpu {
     /// Create a new CPU
-    pub fn new(bus: Box<dyn Bus>, debug: bool) -> Cpu {
+    pub fn new() -> Cpu {
         Cpu {
             a: 0,
             x: 0,
@@ -119,13 +119,18 @@ impl Cpu {
             addr_mode: AddressingMode::None,
             opcode: 0,
             fetched_data: 0,
-            bus,
 
+            bus: bus::null(),
             variant: Variant::CMOS,
             enable_illegal_opcodes: false,
             current_instruction_string: String::new(),
-            debug,
+            debug: false,
         }
+    }
+
+    /// Connect the bus to the CPU
+    pub fn connect_bus(&mut self, bus: Box<dyn Bus>) {
+        self.bus = bus;
     }
 
     /// Reset the CPU
@@ -413,7 +418,8 @@ mod cpu_tests {
     #[test]
     fn test_reset() {
         let bus = Box::new(TestBus::new());
-        let mut cpu = Cpu::new(bus, false);
+        let mut cpu = Cpu::new();
+        cpu.connect_bus(bus);
         cpu.write(RESET_VECTOR, 0x00);
         cpu.write(RESET_VECTOR + 1, 0x80);
         cpu.reset();
@@ -434,7 +440,8 @@ mod cpu_tests {
     #[test]
     fn test_read_u16() {
         let bus = Box::new(TestBus::new());
-        let mut cpu = Cpu::new(bus, false);
+        let mut cpu = Cpu::new();
+        cpu.connect_bus(bus);
         cpu.write(0x10, 0x20);
         cpu.write(0x11, 0x30);
 
@@ -444,7 +451,8 @@ mod cpu_tests {
     #[test]
     fn test_write_u16() {
         let bus = Box::new(TestBus::new());
-        let mut cpu = Cpu::new(bus, false);
+        let mut cpu = Cpu::new();
+        cpu.connect_bus(bus);
         cpu.write_u16(0x10, 0x3020);
 
         assert_eq!(cpu.read(0x10), 0x20);
@@ -454,7 +462,8 @@ mod cpu_tests {
     #[test]
     fn test_read_write() {
         let bus = Box::new(TestBus::new());
-        let mut cpu = Cpu::new(bus, false);
+        let mut cpu = Cpu::new();
+        cpu.connect_bus(bus);
 
         cpu.write(0x10, 0x20);
 
