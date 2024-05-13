@@ -1,5 +1,6 @@
 use crate::addressing::AddressingMode;
 use crate::{Cpu, StatusFlags, Variant};
+use crate::addresses::IRQ_VECTOR;
 
 pub struct Instruction {
     pub illegal: bool,
@@ -2111,8 +2112,10 @@ fn adc(cpu: &mut Cpu) -> u8 {
 }
 
 fn and(cpu: &mut Cpu) -> u8 {
-    // TODO: Add AND implementation
-    0
+    cpu.fetch();
+    cpu.a &= cpu.fetched_data;
+    cpu.set_zn_flags(cpu.a);
+    1
 }
 
 fn asl(cpu: &mut Cpu) -> u8 {
@@ -2130,54 +2133,69 @@ fn asl(cpu: &mut Cpu) -> u8 {
     0
 }
 
+fn do_branch(cpu: &mut Cpu, condition: bool) -> u8 {
+    let mut extra_cycle: u8 = 0;
+    if condition {
+        cpu.addr_abs = cpu.pc + cpu.addr_rel;
+        if (cpu.addr_abs & 0xFF00) != (cpu.pc & 0xFF00) {
+            extra_cycle += 1;
+        }
+        cpu.pc = cpu.addr_abs;
+        extra_cycle += 1;
+    }
+    extra_cycle
+}
+
 fn bcc(cpu: &mut Cpu) -> u8 {
-    // TODO: Add BCC implementation
-    0
+    return do_branch(cpu, !cpu.get_flag(StatusFlags::Carry));
 }
 
 fn bcs(cpu: &mut Cpu) -> u8 {
-    // TODO: Add BCS implementation
-    0
+    return do_branch(cpu, cpu.get_flag(StatusFlags::Carry));
 }
 
 fn beq(cpu: &mut Cpu) -> u8 {
-    // TODO: Add BEQ implementation
-    0
+    return do_branch(cpu, cpu.get_flag(StatusFlags::Zero));
 }
 
 fn bit(cpu: &mut Cpu) -> u8 {
-    // TODO: Add BIT implementation
+    cpu.fetch();
+    let temp: u16 = cpu.a as u16 & cpu.fetched_data as u16;
+    cpu.set_flag(StatusFlags::Negative, (cpu.fetched_data & 0x80) > 0);
+    cpu.set_flag(StatusFlags::Overflow, (cpu.fetched_data & 0x40) > 0);
+    cpu.set_flag(StatusFlags::Zero, temp == 0x00);
     0
 }
 
 fn bmi(cpu: &mut Cpu) -> u8 {
-    // TODO: Add BMI implementation
-    0
+    return do_branch(cpu, cpu.get_flag(StatusFlags::Negative));
 }
 
 fn bne(cpu: &mut Cpu) -> u8 {
-    // TODO: Add BNE implementation
-    0
+    return do_branch(cpu, !cpu.get_flag(StatusFlags::Zero));
 }
 
 fn bpl(cpu: &mut Cpu) -> u8 {
-    // TODO: Add BPL implementation
-    0
+    return do_branch(cpu, !cpu.get_flag(StatusFlags::Negative));
 }
 
 fn brk(cpu: &mut Cpu) -> u8 {
-    // TODO: Add BRK implementation
+    cpu.pc += 1;
+    cpu.set_flag(StatusFlags::InterruptDisable, true);
+    cpu.push_word(cpu.pc);
+    cpu.set_flag(StatusFlags::Break, true);
+    cpu.push(cpu.status);
+    cpu.set_flag(StatusFlags::Break, false);
+    cpu.pc = cpu.read_u16(IRQ_VECTOR);
     0
 }
 
 fn bvc(cpu: &mut Cpu) -> u8 {
-    // TODO: Add BVC implementation
-    0
+    return do_branch(cpu, !cpu.get_flag(StatusFlags::Overflow));
 }
 
 fn bvs(cpu: &mut Cpu) -> u8 {
-    // TODO: Add BVS implementation
-    0
+    return do_branch(cpu, cpu.get_flag(StatusFlags::Overflow));
 }
 
 fn clc(cpu: &mut Cpu) -> u8 {
@@ -2186,67 +2204,93 @@ fn clc(cpu: &mut Cpu) -> u8 {
 }
 
 fn cld(cpu: &mut Cpu) -> u8 {
-    // TODO: Add CLD implementation
+    cpu.set_flag(StatusFlags::Decimal, false);
     0
 }
 
 fn cli(cpu: &mut Cpu) -> u8 {
-    // TODO: Add CLI implementation
+    cpu.set_flag(StatusFlags::InterruptDisable, false);
     0
 }
 
 fn clv(cpu: &mut Cpu) -> u8 {
-    // TODO: Add CLV implementation
+    cpu.set_flag(StatusFlags::Overflow, false);
     0
 }
 
 fn cmp(cpu: &mut Cpu) -> u8 {
-    // TODO: Add CMP implementation
-    0
+    cpu.fetch();
+    let mut temp = cpu.a as u16;
+    temp = temp.wrapping_sub(cpu.fetched_data as u16);
+    cpu.set_flag(StatusFlags::Carry, cpu.a >= cpu.fetched_data);
+    cpu.set_zn_flags(temp as u8);
+    1
 }
 
 fn cpx(cpu: &mut Cpu) -> u8 {
-    // TODO: Add CPX implementation
+    cpu.fetch();
+    let mut temp = cpu.x as u16;
+    temp = temp.wrapping_sub(cpu.fetched_data as u16);
+    cpu.set_flag(StatusFlags::Carry, cpu.x >= cpu.fetched_data);
+    cpu.set_zn_flags(temp as u8);
     0
 }
 
 fn cpy(cpu: &mut Cpu) -> u8 {
-    // TODO: Add CPY implementation
+    cpu.fetch();
+    let mut temp = cpu.y as u16;
+    temp = temp.wrapping_sub(cpu.fetched_data as u16);
+    cpu.set_flag(StatusFlags::Carry, cpu.y >= cpu.fetched_data);
+    cpu.set_zn_flags(temp as u8);
     0
 }
 
 fn dec(cpu: &mut Cpu) -> u8 {
-    // TODO: Add DEC implementation
+    cpu.fetch();
+    let mut temp = cpu.fetched_data as u16;
+    temp = temp.wrapping_sub(1);
+    cpu.write(cpu.addr_abs, (temp & 0x00ff) as u8);
+    cpu.set_zn_flags(temp as u8);
     0
 }
 
 fn dex(cpu: &mut Cpu) -> u8 {
-    // TODO: Add DEX implementation
+    cpu.x = cpu.x.wrapping_sub(1);
+    cpu.set_zn_flags(cpu.x);
     0
 }
 
 fn dey(cpu: &mut Cpu) -> u8 {
-    // TODO: Add DEY implementation
+    cpu.y = cpu.y.wrapping_sub(1);
+    cpu.set_zn_flags(cpu.y);
     0
 }
 
 fn eor(cpu: &mut Cpu) -> u8 {
-    // TODO: Add EOR implementation
-    0
+    cpu.fetch();
+    cpu.a = cpu.a ^ cpu.fetched_data;
+    cpu.set_zn_flags(cpu.a);
+    1
 }
 
 fn inc(cpu: &mut Cpu) -> u8 {
-    // TODO: Add INC implementation
+    cpu.fetch();
+    let mut temp = cpu.fetched_data as u16;
+    temp = temp.wrapping_add(1);
+    cpu.write(cpu.addr_abs, (temp & 0x00ff) as u8);
+    cpu.set_zn_flags(temp as u8);
     0
 }
 
 fn inx(cpu: &mut Cpu) -> u8 {
-    // TODO: Add INX implementation
+    cpu.x = cpu.x.wrapping_add(1);
+    cpu.set_zn_flags(cpu.x);
     0
 }
 
 fn iny(cpu: &mut Cpu) -> u8 {
-    // TODO: Add INY implementation
+    cpu.y = cpu.y.wrapping_add(1);
+    cpu.set_zn_flags(cpu.y);
     0
 }
 
@@ -2264,31 +2308,40 @@ fn jsr(cpu: &mut Cpu) -> u8 {
 fn lda(cpu: &mut Cpu) -> u8 {
     cpu.fetch();
     cpu.a = cpu.fetched_data;
-    cpu.set_zn_flags("A");
+    cpu.set_zn_flags(cpu.a);
     1
 }
 
 fn ldx(cpu: &mut Cpu) -> u8 {
     cpu.fetch();
     cpu.x = cpu.fetched_data;
-    cpu.set_zn_flags("X");
+    cpu.set_zn_flags(cpu.x);
     1
 }
 
 fn ldy(cpu: &mut Cpu) -> u8 {
     cpu.fetch();
     cpu.y = cpu.fetched_data;
-    cpu.set_zn_flags("Y");
+    cpu.set_zn_flags(cpu.y);
     1
 }
 
 fn lsr(cpu: &mut Cpu) -> u8 {
-    // TODO: Add LSR implementation
+    cpu.fetch();
+    let mut temp = cpu.fetched_data as u16;
+    temp >>= 1;
+    cpu.set_flag(StatusFlags::Carry, (temp & 0x01) != 0);
+    cpu.set_zn_flags(temp as u8);
+    if cpu.addr_mode == AddressingMode::Implied {
+        cpu.a = (temp & 0x00ff) as u8;
+    } else {
+        cpu.write(cpu.addr_abs, (temp & 0x00ff) as u8);
+    }
     0
 }
 
-fn nop(cpu: &mut Cpu) -> u8 {
-    // TODO: Add NOP implementation
+fn nop(_cpu: &mut Cpu) -> u8 {
+    // NOP does nothing
     0
 }
 
