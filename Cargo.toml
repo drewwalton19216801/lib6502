@@ -1,7 +1,12 @@
 [package]
 name = "lib6502"
-version = "0.1.0"
+description = "An experimental 6502 emulation library"
+version = "0.1.1"
 edition = "2021"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/drewwalton19216801/lib6502"
+exclude = [".github/*", "*.idea/*"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

@@ -1,6 +1,6 @@
-# rs6502 CPU emulation library
+# lib6502 CPU emulation library
 ## What is this?
-It's a 6502 emulation library written in Rust.
+It's an experimental 6502 emulation library written in Rust.
 ## Why is this?
 Because I thought it would be fun, I was also inspired by [Ben Eater's excellent 6502 video series](https://eater.net/6502). Originally I had wanted to create a breadboard computer, but realized that I didn't have the extra cash for things like logic analyzers or oscilloscopes. Besides, emulating in software gives me flexibility to create whatever hardware I want!
 ## Building
