@@ -353,9 +353,9 @@ impl Cpu {
         }
     }
 
-    fn set_zn_flags(&mut self, register: &str) {
-        self.set_flag(StatusFlags::Zero, self.get_register(register) == 0);
-        self.set_flag(StatusFlags::Negative, self.get_register(register) & 0x80 != 0);
+    fn set_zn_flags(&mut self, value: u8) {
+        self.set_flag(StatusFlags::Zero, value == 0);
+        self.set_flag(StatusFlags::Negative, value & 0x80 != 0);
     }
 
     /// Clock the CPU
