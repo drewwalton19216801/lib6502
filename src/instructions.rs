@@ -2577,97 +2577,97 @@ fn tya(cpu: &mut Cpu) -> u8 {
 }
 
 /** Illegal instructions */
-fn ahx(cpu: &mut Cpu) -> u8 {
+fn ahx(_cpu: &mut Cpu) -> u8 {
     // TODO: Add AHX implementation
     0
 }
 
-fn alr(cpu: &mut Cpu) -> u8 {
+fn alr(_cpu: &mut Cpu) -> u8 {
     // TODO: Add ALR implementation
     0
 }
 
-fn anc(cpu: &mut Cpu) -> u8 {
+fn anc(_cpu: &mut Cpu) -> u8 {
     // TODO: Add ANC implementation
     0
 }
 
-fn arr(cpu: &mut Cpu) -> u8 {
+fn arr(_cpu: &mut Cpu) -> u8 {
     // TODO: Add ARR implementation
     0
 }
 
-fn axs(cpu: &mut Cpu) -> u8 {
+fn axs(_cpu: &mut Cpu) -> u8 {
     // TODO: Add AXS implementation
     0
 }
 
-fn dcp(cpu: &mut Cpu) -> u8 {
+fn dcp(_cpu: &mut Cpu) -> u8 {
     // TODO: Add DCP implementation
     0
 }
 
-fn isc(cpu: &mut Cpu) -> u8 {
+fn isc(_cpu: &mut Cpu) -> u8 {
     // TODO: Add ISC implementation
     0
 }
 
-fn kil(cpu: &mut Cpu) -> u8 {
+fn kil(_cpu: &mut Cpu) -> u8 {
     // TODO: Add KIL implementation
     0
 }
 
-fn las(cpu: &mut Cpu) -> u8 {
+fn las(_cpu: &mut Cpu) -> u8 {
     // TODO: Add LAS implementation
     0
 }
 
-fn lax(cpu: &mut Cpu) -> u8 {
+fn lax(_cpu: &mut Cpu) -> u8 {
     // TODO: Add LAX implementation
     0
 }
 
-fn rla(cpu: &mut Cpu) -> u8 {
+fn rla(_cpu: &mut Cpu) -> u8 {
     // TODO: Add RLA implementation
     0
 }
 
-fn rra(cpu: &mut Cpu) -> u8 {
+fn rra(_cpu: &mut Cpu) -> u8 {
     // TODO: Add RRA implementation
     0
 }
 
-fn sax(cpu: &mut Cpu) -> u8 {
+fn sax(_cpu: &mut Cpu) -> u8 {
     // TODO: Add SAX implementation
     0
 }
 
-fn shx(cpu: &mut Cpu) -> u8 {
+fn shx(_cpu: &mut Cpu) -> u8 {
     // TODO: Add SHX implementation
     0
 }
 
-fn shy(cpu: &mut Cpu) -> u8 {
+fn shy(_cpu: &mut Cpu) -> u8 {
     // TODO: Add SHY implementation
     0
 }
 
-fn slo(cpu: &mut Cpu) -> u8 {
+fn slo(_cpu: &mut Cpu) -> u8 {
     // TODO: Add SLO implementation
     0
 }
 
-fn sre(cpu: &mut Cpu) -> u8 {
+fn sre(_cpu: &mut Cpu) -> u8 {
     // TODO: Add SRE implementation
     0
 }
 
-fn tas(cpu: &mut Cpu) -> u8 {
+fn tas(_cpu: &mut Cpu) -> u8 {
     // TODO: Add TAS implementation
     0
 }
 
-fn xaa(cpu: &mut Cpu) -> u8 {
+fn xaa(_cpu: &mut Cpu) -> u8 {
     // TODO: Add XAA implementation
     0
 }
