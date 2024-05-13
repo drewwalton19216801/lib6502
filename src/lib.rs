@@ -332,7 +332,6 @@ impl Cpu {
     }
 
     /// Interrupt request
-    #[allow(dead_code)]
     pub fn irq(&mut self) {
         if !self.get_flag(StatusFlags::InterruptDisable) {
             self.do_interrupt(addresses::IRQ_VECTOR);
@@ -340,7 +339,6 @@ impl Cpu {
     }
 
     /// Non-maskable interrupt request
-    #[allow(dead_code)]
     pub fn nmi(&mut self) {
         self.do_interrupt(addresses::NMI_VECTOR);
     }
