@@ -1,7 +1,7 @@
-///! The bus module
-///!
-///! A bus is a device that can read and write to memory. It is connected to the CPU
-///! and other devices.
+/// The bus module
+///
+/// A bus is a device that can read and write to memory. It is connected to the CPU
+/// and other devices.
 pub trait Bus {
     /// Read a byte from memory
     fn read(&self, address: u16) -> u8;
