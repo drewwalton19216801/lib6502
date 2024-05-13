@@ -280,20 +280,20 @@ impl Cpu {
     }
 
     fn get_operand_string(&mut self, mode: AddressingMode, address: u16) -> String {
-        match mode {
-            AddressingMode::None => return String::from(""),
-            AddressingMode::Implied => return String::from(""),
-            AddressingMode::Immediate => return format!("#${:02X}", self.read(address)),
-            AddressingMode::ZeroPage => return format!("${:02X}", self.read(address)),
-            AddressingMode::ZeroPageX => return format!("${:02X},X", self.read(address)),
-            AddressingMode::ZeroPageY => return format!("${:02X},Y", self.read(address)),
-            AddressingMode::Relative => return format!("${:02X}", self.read(address)),
-            AddressingMode::Absolute => return format!("${:04X}", self.read_u16(address)),
-            AddressingMode::AbsoluteX => return format!("${:04X},X", self.read_u16(address)),
-            AddressingMode::AbsoluteY => return format!("${:04X},Y", self.read_u16(address)),
-            AddressingMode::Indirect => return format!("(${:04X})", self.read_u16(address)),
-            AddressingMode::IndexedIndirect => return format!("(${:02X},X)", self.read(address)),
-            AddressingMode::IndirectIndexed => return format!("(${:02X}),Y", self.read(address)),
+        return match mode {
+            AddressingMode::None => String::from(""),
+            AddressingMode::Implied => String::from(""),
+            AddressingMode::Immediate => format!("#${:02X}", self.read(address)),
+            AddressingMode::ZeroPage => format!("${:02X}", self.read(address)),
+            AddressingMode::ZeroPageX => format!("${:02X},X", self.read(address)),
+            AddressingMode::ZeroPageY => format!("${:02X},Y", self.read(address)),
+            AddressingMode::Relative => format!("${:02X}", self.read(address)),
+            AddressingMode::Absolute => format!("${:04X}", self.read_u16(address)),
+            AddressingMode::AbsoluteX => format!("${:04X},X", self.read_u16(address)),
+            AddressingMode::AbsoluteY => format!("${:04X},Y", self.read_u16(address)),
+            AddressingMode::Indirect => format!("(${:04X})", self.read_u16(address)),
+            AddressingMode::IndexedIndirect => format!("(${:02X},X)", self.read(address)),
+            AddressingMode::IndirectIndexed => format!("(${:02X}),Y", self.read(address)),
         }
     }
 
