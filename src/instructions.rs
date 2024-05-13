@@ -2346,67 +2346,131 @@ fn nop(_cpu: &mut Cpu) -> u8 {
 }
 
 fn ora(cpu: &mut Cpu) -> u8 {
-    // TODO: Add ORA implementation
-    0
+    cpu.fetch();
+    cpu.a |= cpu.fetched_data;
+    cpu.set_zn_flags(cpu.a);
+    1
 }
 
 fn pha(cpu: &mut Cpu) -> u8 {
-    // TODO: Add PHA implementation
+    cpu.push(cpu.a);
     0
 }
 
 fn php(cpu: &mut Cpu) -> u8 {
-    // TODO: Add PHP implementation
+    cpu.push(cpu.status | cpu.get_flag(StatusFlags::Break) as u8 | cpu.get_flag(StatusFlags::Unused) as u8);
+    cpu.set_flag(StatusFlags::Break, false);
+    cpu.set_flag(StatusFlags::Unused, false);
     0
 }
 
 fn pla(cpu: &mut Cpu) -> u8 {
-    // TODO: Add PLA implementation
+    cpu.a = cpu.pop();
+    cpu.set_zn_flags(cpu.a);
     0
 }
 
 fn plp(cpu: &mut Cpu) -> u8 {
-    // TODO: Add PLP implementation
+    cpu.status = cpu.pop();
+    cpu.set_flag(StatusFlags::Unused, true);
     0
 }
 
 fn rol(cpu: &mut Cpu) -> u8 {
-    // TODO: Add ROL implementation
+    cpu.fetch();
+    let mut temp = cpu.fetched_data as u16;
+    temp <<= 1;
+    if cpu.get_flag(StatusFlags::Carry) {
+        temp |= 0x01;
+    }
+    cpu.set_flag(StatusFlags::Carry, (temp & 0xFF00) != 0);
+    cpu.set_zn_flags(temp as u8);
+    if cpu.addr_mode == AddressingMode::Implied {
+        cpu.a = (temp & 0x00ff) as u8;
+    } else {
+        cpu.write(cpu.addr_abs, (temp & 0x00ff) as u8);
+    }
     0
 }
 
 fn ror_a(cpu: &mut Cpu) -> u8 {
-    // TODO: Add ROR implementation
-    0
+    return match cpu.variant {
+        Variant::NMOS => ror_a_nmos(cpu),
+        _ => ror_a_cmos(cpu),
+    }
 }
 
 fn ror(cpu: &mut Cpu) -> u8 {
-    // TODO: Add ROR implementation
-    0
+    return match cpu.variant {
+        Variant::NMOS => ror_nmos(cpu),
+        _ => ror_cmos(cpu),
+    }
 }
 
+/// NMOS ROR implementation
+/// 
+/// Officially, the ROR instruction was not implemented in the NMOS 6502. However,
+/// attempting to use it anyway results in effectively an LSR. We attempt to emulate
+/// that behavior here.
 fn ror_a_nmos(cpu: &mut Cpu) -> u8 {
-    // TODO: Add ROR implementation
+    let mut temp = cpu.a as u16;
+    temp &= 0x7f;
+    temp <<= 1;
+    temp &= 0xff;
+    cpu.set_zn_flags(temp as u8);
+    if cpu.addr_mode == AddressingMode::Immediate {
+        cpu.a = temp as u8;
+    } else {
+        cpu.write(cpu.addr_abs, temp as u8);
+    }
     0
 }
 
+/// CMOS ROR implementation
+/// 
+/// Unlike above, the ROR instruction *is* correctly implemented in the CMOS 6502.
 fn ror_a_cmos(cpu: &mut Cpu) -> u8 {
-    // TODO: Add ROR implementation
+    let mut temp = cpu.a as u16;
+    if cpu.get_flag(StatusFlags::Carry) {
+        temp |= 0x100;
+    }
+    cpu.set_flag(StatusFlags::Carry, (temp & 0x01) > 0);
+    temp >>= 1;
+    temp &= 0xff;
+    cpu.set_zn_flags(temp as u8);
+    cpu.a = temp as u8;
     0
 }
 
 fn ror_nmos(cpu: &mut Cpu) -> u8 {
-    // TODO: Add ROR implementation
+    let mut temp = cpu.fetch() as u16;
+    temp &= 0x7f;
+    temp <<= 1;
+    temp &= 0xff;
+    cpu.set_flag(StatusFlags::Carry, (temp & 0x80) > 0);
+    cpu.set_zn_flags(temp as u8);
+    cpu.write(cpu.addr_abs, temp as u8);
     0
 }
 
 fn ror_cmos(cpu: &mut Cpu) -> u8 {
-    // TODO: Add ROR implementation
+    let mut temp = cpu.fetch() as u16;
+    if cpu.get_flag(StatusFlags::Carry) {
+        temp |= 0x100;
+    }
+    cpu.set_flag(StatusFlags::Carry, (temp & 0x01) > 0);
+    temp >>= 1;
+    temp &= 0xff;
+    cpu.set_zn_flags(temp as u8);
+    cpu.write(cpu.addr_abs, temp as u8);
     0
 }
 
 fn rti(cpu: &mut Cpu) -> u8 {
-    // TODO: Add RTI implementation
+    cpu.status = cpu.pop();
+    cpu.set_flag(StatusFlags::Unused, false);
+    cpu.set_flag(StatusFlags::Break, false);
+    cpu.pc = cpu.pop_word();
     0
 }
 
@@ -2416,22 +2480,49 @@ fn rts(cpu: &mut Cpu) -> u8 {
 }
 
 fn sbc(cpu: &mut Cpu) -> u8 {
-    // TODO: Add SBC implementation
-    0
+    let mut extra_cycles: u8 = 0;
+    cpu.fetch();
+    let mut temp = (cpu.a as u16)
+        .wrapping_sub(cpu.fetched_data as u16)
+        .wrapping_sub(cpu.get_flag(StatusFlags::Carry) as u16);
+    cpu.set_flag(StatusFlags::Zero, temp & 0x00ff == 0);
+    if cpu.variant != Variant::NES {
+        if cpu.get_flag(StatusFlags::Decimal) {
+            if (temp & 0x000f) > 0x0009 {
+                temp -= 0x0006;
+            }
+            cpu.set_flag(StatusFlags::Negative, (temp & 0x0080) > 0);
+            cpu.set_flag(StatusFlags::Overflow, 
+                         ((cpu.a ^ temp as u8) & (cpu.fetched_data ^ temp as u8) & 0x80) > 0);
+            if temp > 0x99ff {
+                temp += 0x0060;
+            }
+            cpu.set_flag(StatusFlags::Carry, temp > 0x99FF);
+            extra_cycles += 1;
+        }
+    } else {
+        cpu.set_flag(StatusFlags::Negative, (temp & 0x80) > 0);
+        cpu.set_flag(
+            StatusFlags::Overflow, 
+            ((cpu.a ^ cpu.fetched_data) & 0x80 != 0) && ((cpu.fetched_data ^ temp as u8) & 0x80 == 0));
+        cpu.set_flag(StatusFlags::Carry, temp > 255);
+    }
+    cpu.a = (temp & 0x00ff) as u8;
+    extra_cycles
 }
 
 fn sec(cpu: &mut Cpu) -> u8 {
-    // TODO: Add SEC implementation
+    cpu.set_flag(StatusFlags::Carry, true);
     0
 }
 
 fn sed(cpu: &mut Cpu) -> u8 {
-    // TODO: Add SED implementation
+    cpu.set_flag(StatusFlags::Decimal, true);
     0
 }
 
 fn sei(cpu: &mut Cpu) -> u8 {
-    // TODO: Add SEI implementation
+    cpu.set_flag(StatusFlags::InterruptDisable, true);
     0
 }
 
@@ -2441,42 +2532,47 @@ fn sta(cpu: &mut Cpu) -> u8 {
 }
 
 fn stx(cpu: &mut Cpu) -> u8 {
-    // TODO: Add STX implementation
+    cpu.write(cpu.addr_abs, cpu.x);
     0
 }
 
 fn sty(cpu: &mut Cpu) -> u8 {
-    // TODO: Add STY implementation
+    cpu.write(cpu.addr_abs, cpu.y);
     0
 }
 
 fn tax(cpu: &mut Cpu) -> u8 {
-    // TODO: Add TAX implementation
+    cpu.x = cpu.a;
+    cpu.set_zn_flags(cpu.x);
     0
 }
 
 fn tay(cpu: &mut Cpu) -> u8 {
-    // TODO: Add TAY implementation
+    cpu.y = cpu.a;
+    cpu.set_zn_flags(cpu.y);
     0
 }
 
 fn tsx(cpu: &mut Cpu) -> u8 {
-    // TODO: Add TSX implementation
+    cpu.x = cpu.sp;
+    cpu.set_zn_flags(cpu.x);
     0
 }
 
 fn txa(cpu: &mut Cpu) -> u8 {
-    // TODO: Add TXA implementation
+    cpu.a = cpu.x;
+    cpu.set_zn_flags(cpu.a);
     0
 }
 
 fn txs(cpu: &mut Cpu) -> u8 {
-    // TODO: Add TXS implementation
+    cpu.sp = cpu.x;
     0
 }
 
 fn tya(cpu: &mut Cpu) -> u8 {
-    // TODO: Add TYA implementation
+    cpu.a = cpu.y;
+    cpu.set_zn_flags(cpu.a);
     0
 }
 
