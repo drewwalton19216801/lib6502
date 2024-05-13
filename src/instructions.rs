@@ -2072,6 +2072,27 @@ pub fn get_addr_mode(opcode: u8) -> AddressingMode {
     INSTRUCTION_LIST[opcode as usize].mode
 }
 
+fn store_result(cpu: &mut Cpu, value: u16) {
+    if cpu.addr_mode == AddressingMode::Implied {
+        cpu.a = (value & 0x00ff) as u8;
+    } else {
+        cpu.write(cpu.addr_abs, (value & 0x00ff) as u8);
+    }
+}
+
+fn do_branch(cpu: &mut Cpu, condition: bool) -> u8 {
+    let mut extra_cycle: u8 = 0;
+    if condition {
+        cpu.addr_abs = cpu.pc + cpu.addr_rel;
+        if (cpu.addr_abs & 0xFF00) != (cpu.pc & 0xFF00) {
+            extra_cycle += 1;
+        }
+        cpu.pc = cpu.addr_abs;
+        extra_cycle += 1;
+    }
+    extra_cycle
+}
+
 fn adc(cpu: &mut Cpu) -> u8 {
     let mut extra_cycle: u8 = 0;
     cpu.fetch();
@@ -2131,19 +2152,6 @@ fn asl(cpu: &mut Cpu) -> u8 {
         cpu.write(cpu.addr_abs, (temp & 0x00FF) as u8);
     }
     0
-}
-
-fn do_branch(cpu: &mut Cpu, condition: bool) -> u8 {
-    let mut extra_cycle: u8 = 0;
-    if condition {
-        cpu.addr_abs = cpu.pc + cpu.addr_rel;
-        if (cpu.addr_abs & 0xFF00) != (cpu.pc & 0xFF00) {
-            extra_cycle += 1;
-        }
-        cpu.pc = cpu.addr_abs;
-        extra_cycle += 1;
-    }
-    extra_cycle
 }
 
 fn bcc(cpu: &mut Cpu) -> u8 {
@@ -2332,11 +2340,7 @@ fn lsr(cpu: &mut Cpu) -> u8 {
     temp >>= 1;
     cpu.set_flag(StatusFlags::Carry, (temp & 0x01) != 0);
     cpu.set_zn_flags(temp as u8);
-    if cpu.addr_mode == AddressingMode::Implied {
-        cpu.a = (temp & 0x00ff) as u8;
-    } else {
-        cpu.write(cpu.addr_abs, (temp & 0x00ff) as u8);
-    }
+    store_result(cpu, temp);
     0
 }
 
@@ -2385,11 +2389,7 @@ fn rol(cpu: &mut Cpu) -> u8 {
     }
     cpu.set_flag(StatusFlags::Carry, (temp & 0xFF00) != 0);
     cpu.set_zn_flags(temp as u8);
-    if cpu.addr_mode == AddressingMode::Implied {
-        cpu.a = (temp & 0x00ff) as u8;
-    } else {
-        cpu.write(cpu.addr_abs, (temp & 0x00ff) as u8);
-    }
+    store_result(cpu, temp);
     0
 }
 
