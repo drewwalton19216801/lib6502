@@ -1,6 +1,6 @@
+use crate::addresses::IRQ_VECTOR;
 use crate::addressing::AddressingMode;
 use crate::{Cpu, StatusFlags, Variant};
-use crate::addresses::IRQ_VECTOR;
 
 pub struct Instruction {
     pub illegal: bool,
@@ -2362,7 +2362,11 @@ fn pha(cpu: &mut Cpu) -> u8 {
 }
 
 fn php(cpu: &mut Cpu) -> u8 {
-    cpu.push(cpu.status | cpu.get_flag(StatusFlags::Break) as u8 | cpu.get_flag(StatusFlags::Unused) as u8);
+    cpu.push(
+        cpu.status
+            | cpu.get_flag(StatusFlags::Break) as u8
+            | cpu.get_flag(StatusFlags::Unused) as u8,
+    );
     cpu.set_flag(StatusFlags::Break, false);
     cpu.set_flag(StatusFlags::Unused, false);
     0
@@ -2408,7 +2412,7 @@ fn ror(cpu: &mut Cpu) -> u8 {
 }
 
 /// NMOS ROR implementation
-/// 
+///
 /// Officially, the ROR instruction was not implemented in the NMOS 6502. However,
 /// attempting to use it anyway results in effectively an LSR. We attempt to emulate
 /// that behavior here.
@@ -2427,7 +2431,7 @@ fn ror_a_nmos(cpu: &mut Cpu) -> u8 {
 }
 
 /// CMOS ROR implementation
-/// 
+///
 /// Unlike above, the ROR instruction *is* correctly implemented in the CMOS 6502.
 fn ror_a_cmos(cpu: &mut Cpu) -> u8 {
     let mut temp = cpu.a as u16;
@@ -2492,8 +2496,10 @@ fn sbc(cpu: &mut Cpu) -> u8 {
                 temp -= 0x0006;
             }
             cpu.set_flag(StatusFlags::Negative, (temp & 0x0080) > 0);
-            cpu.set_flag(StatusFlags::Overflow, 
-                         ((cpu.a ^ temp as u8) & (cpu.fetched_data ^ temp as u8) & 0x80) > 0);
+            cpu.set_flag(
+                StatusFlags::Overflow,
+                ((cpu.a ^ temp as u8) & (cpu.fetched_data ^ temp as u8) & 0x80) > 0,
+            );
             if temp > 0x99ff {
                 temp += 0x0060;
             }
@@ -2503,8 +2509,10 @@ fn sbc(cpu: &mut Cpu) -> u8 {
     } else {
         cpu.set_flag(StatusFlags::Negative, (temp & 0x80) > 0);
         cpu.set_flag(
-            StatusFlags::Overflow, 
-            ((cpu.a ^ cpu.fetched_data) & 0x80 != 0) && ((cpu.fetched_data ^ temp as u8) & 0x80 == 0));
+            StatusFlags::Overflow,
+            ((cpu.a ^ cpu.fetched_data) & 0x80 != 0)
+                && ((cpu.fetched_data ^ temp as u8) & 0x80 == 0),
+        );
         cpu.set_flag(StatusFlags::Carry, temp > 255);
     }
     cpu.a = (temp & 0x00ff) as u8;

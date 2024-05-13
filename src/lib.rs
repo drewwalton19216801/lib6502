@@ -6,17 +6,17 @@
 //! on the bus. The CPU can then read and write to these devices.
 
 mod addresses;
+mod addressing;
 /// The bus module
 pub mod bus;
-mod addressing;
 mod instructions;
 
-use std::fmt::Display;
-use bitflags::bitflags;
 use crate::addresses::RESET_VECTOR;
 use crate::addressing::AddressingMode;
 use crate::bus::Bus;
 use crate::instructions::INSTRUCTION_LIST;
+use bitflags::bitflags;
+use std::fmt::Display;
 
 /// The emulated 6502 CPU
 pub struct Cpu {
@@ -124,7 +124,7 @@ impl Cpu {
             variant: Variant::CMOS,
             enable_illegal_opcodes: false,
             current_instruction_string: String::new(),
-            debug
+            debug,
         }
     }
 
@@ -138,7 +138,9 @@ impl Cpu {
         self.y = 0;
         self.sp = 0xfd;
         self.pc = self.read_u16(RESET_VECTOR);
-        self.status = StatusFlags::None.bits() | StatusFlags::Unused.bits() | StatusFlags::InterruptDisable.bits();
+        self.status = StatusFlags::None.bits()
+            | StatusFlags::Unused.bits()
+            | StatusFlags::InterruptDisable.bits();
         self.cycles = 8;
         self.current_instruction_string = "RESET".to_string();
     }
@@ -226,7 +228,11 @@ impl Cpu {
         } else {
             "i"
         });
-        status.push_str(if self.get_flag(StatusFlags::Zero) { "Z" } else { "z" });
+        status.push_str(if self.get_flag(StatusFlags::Zero) {
+            "Z"
+        } else {
+            "z"
+        });
         status.push_str(if self.get_flag(StatusFlags::Carry) {
             "C"
         } else {
@@ -331,7 +337,7 @@ impl Cpu {
     pub fn nmi(&mut self) {
         self.do_interrupt(addresses::NMI_VECTOR);
     }
-    
+
     /// Get the value of a register
     pub fn get_register(&self, register: &str) -> u8 {
         match register {
@@ -402,8 +408,8 @@ mod cpu_tests {
         }
     }
 
-    use std::io::Read;
     use super::*;
+    use std::io::Read;
     #[test]
     fn test_reset() {
         let bus = Box::new(TestBus::new());
@@ -413,7 +419,12 @@ mod cpu_tests {
         cpu.reset();
 
         assert_eq!(cpu.pc, 0x8000);
-        assert_eq!(cpu.status, StatusFlags::None.bits() | StatusFlags::Unused.bits() | StatusFlags::InterruptDisable.bits());
+        assert_eq!(
+            cpu.status,
+            StatusFlags::None.bits()
+                | StatusFlags::Unused.bits()
+                | StatusFlags::InterruptDisable.bits()
+        );
         assert_eq!(cpu.sp, 0xfd);
         assert_eq!(cpu.a, 0);
         assert_eq!(cpu.x, 0);
