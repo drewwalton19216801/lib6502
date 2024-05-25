@@ -53,8 +53,11 @@ pub struct Cpu {
     /// The current instruction string
     pub current_instruction_string: String,
 
-    /// Whether debug mode is enabled
-    pub debug: bool,
+    /// Debug modes
+    /// 0: No debug
+    /// 1: Print each instruction
+    /// 2: Print each cycle
+    pub debug: usize,
 }
 
 bitflags! {
@@ -104,7 +107,7 @@ impl Display for Variant {
 
 impl Cpu {
     /// Create a new CPU
-    pub fn new(bus: Box<dyn Bus>, debug: bool) -> Cpu {
+    pub fn new(bus: Box<dyn Bus>, debug: usize) -> Cpu {
         Cpu {
             a: 0,
             x: 0,
@@ -130,7 +133,7 @@ impl Cpu {
 
     /// Reset the CPU
     pub fn reset(&mut self) {
-        if self.debug {
+        if self.debug > 0 {
             println!("CPU: Reset");
         }
         self.a = 0;
@@ -358,8 +361,14 @@ impl Cpu {
     pub fn clock(&mut self) {
         if self.cycles == 0 {
             self.current_instruction_string = self.disassemble_instruction_at(self.pc);
-            if self.debug {
-                println!("CPU insn: {}", self.current_instruction_string);
+            match self.debug {
+                0 => (),
+                1 => println!("{}", self.current_instruction_string),
+                2 => {
+                    println!("{}", self.current_instruction_string);
+                    println!("CPU pre-execute state: {}", self.get_state());
+                }
+                _ => panic!("Invalid debug mode: {}", self.debug),
             }
             self.opcode = self.read(self.pc);
             self.pc += 1;
@@ -368,6 +377,12 @@ impl Cpu {
             let cycles_addr = self.execute_addr_mode(self.addr_mode);
             let cycles_instruction = self.execute_instruction(self.opcode);
             self.cycles += cycles_addr + cycles_instruction;
+            if self.debug > 1 {
+                println!(
+                    "CPU post-execute state: {}",
+                    self.get_state(),
+                );
+            }
         }
         self.cycles -= 1;
     }
@@ -413,7 +428,7 @@ mod cpu_tests {
     #[test]
     fn test_reset() {
         let bus = Box::new(TestBus::new());
-        let mut cpu = Cpu::new(bus, false);
+        let mut cpu = Cpu::new(bus, 0);
         cpu.write(RESET_VECTOR, 0x00);
         cpu.write(RESET_VECTOR + 1, 0x80);
         cpu.reset();
@@ -434,7 +449,7 @@ mod cpu_tests {
     #[test]
     fn test_read_u16() {
         let bus = Box::new(TestBus::new());
-        let mut cpu = Cpu::new(bus, false);
+        let mut cpu = Cpu::new(bus, 0);
         cpu.write(0x10, 0x20);
         cpu.write(0x11, 0x30);
 
@@ -444,7 +459,7 @@ mod cpu_tests {
     #[test]
     fn test_write_u16() {
         let bus = Box::new(TestBus::new());
-        let mut cpu = Cpu::new(bus, false);
+        let mut cpu = Cpu::new(bus, 0);
         cpu.write_u16(0x10, 0x3020);
 
         assert_eq!(cpu.read(0x10), 0x20);
@@ -454,7 +469,7 @@ mod cpu_tests {
     #[test]
     fn test_read_write() {
         let bus = Box::new(TestBus::new());
-        let mut cpu = Cpu::new(bus, false);
+        let mut cpu = Cpu::new(bus, 0);
 
         cpu.write(0x10, 0x20);
 
