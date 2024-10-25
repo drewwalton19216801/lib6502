@@ -132,8 +132,8 @@ impl<B: Bus> CPU<B> {
         self.map_opcode(0x90, bcc, relative, 2); // BCC Relative
         self.map_opcode(0xB0, bcs, absolute, 2); // BCS Absolute
         self.map_opcode(0xB0, bcs, relative, 2); // BCS Relative
-        // self.map_opcode(0xF0, beq, absolute, 2); // BEQ Absolute
-        // self.map_opcode(0xF0, beq, relative, 2); // BEQ Relative
+        self.map_opcode(0xF0, beq, absolute, 2); // BEQ Absolute
+        self.map_opcode(0xF0, beq, relative, 2); // BEQ Relative
         // self.map_opcode(0x30, bmi, absolute, 2); // BMI Absolute
         // self.map_opcode(0x30, bmi, relative, 2); // BMI Relative
         // self.map_opcode(0xD0, bne, absolute, 2); // BNE Absolute
@@ -144,6 +144,10 @@ impl<B: Bus> CPU<B> {
         // self.map_opcode(0x50, bvc, relative, 2); // BVC Relative
         // self.map_opcode(0x70, bvs, absolute, 2); // BVS Absolute
         // self.map_opcode(0x70, bvs, relative, 2); // BVS Relative
+
+        // Bit Instructions
+        self.map_opcode(0x24, bit, zero_page, 3); // BIT Zero Page
+        self.map_opcode(0x2C, bit, absolute, 4);  // BIT Absolute
         
         // Clear Instructions
         self.map_opcode(0x18, clc, implied, 2); // CLC Implied

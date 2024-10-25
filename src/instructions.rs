@@ -89,6 +89,25 @@ pub fn bcs<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     }
 }
 
+/// Branch if Equal
+pub fn beq<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    if cpu.registers.status.zero {
+        cpu.branch(addr)
+    } else {
+        0 // No additional cycles if branch not taken
+    }
+}
+
+/// Bit Test
+pub fn bit<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    let value = cpu.bus.read(addr);
+    let result = cpu.registers.a & value;
+    cpu.registers.status.zero = result == 0;
+    cpu.registers.status.overflow = (value & 0x40) != 0;
+    cpu.registers.status.negative = (value & 0x80) != 0;
+    0 // No additional cycles
+}
+
 /// Clear Carry Flag
 pub fn clc<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
     cpu.registers.status.carry = false;

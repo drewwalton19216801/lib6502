@@ -259,6 +259,98 @@ fn test_bcs() {
 }
 
 #[test]
+fn test_beq_branch_taken() {
+    // Assemble a program that branches if the zero flag is set
+    // LDA #$00
+    // BEQ $02
+    let program = vec![
+        0xA9, 0x00, // LDA #$00
+        0xF0, 0x02, // BEQ $02
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDA #$00
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x00);
+    assert_eq!(cpu.registers.status.zero, true);
+    assert_eq!(cpu.registers.pc, 0x8002);
+
+    // Execute BEQ $02
+    cpu.step();
+    // PC after fetching instruction and operand: 0x8002 + 2 = 0x8004
+    // Offset: +2
+    // Branch Target: 0x8004 + 2 = 0x8006
+    assert_eq!(cpu.registers.pc, 0x8006);
+    // Total cycles should be 2 (LDA) + 2 (BEQ base cycles) + 1 (branch taken) = 5
+    assert_eq!(cpu.cycles(), 5);
+}
+
+#[test]
+fn test_beq_branch_not_taken() {
+    // Assemble a program that does not branch because the zero flag is clear
+    // LDA #$01
+    // BEQ $02
+    let program = vec![
+        0xA9, 0x01, // LDA #$01
+        0xF0, 0x02, // BEQ $02
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDA #$01
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x01);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.pc, 0x8002);
+
+    // Execute BEQ $02
+    cpu.step();
+    // Since zero flag is not set, branch is not taken
+    // PC should advance by 2 bytes (size of BEQ instruction)
+    assert_eq!(cpu.registers.pc, 0x8004);
+    // Total cycles should be 2 (LDA) + 2 (BEQ base cycles) = 4
+    assert_eq!(cpu.cycles(), 4);
+}
+
+#[test]
+fn test_bit() {
+    // Assemble the program:
+    // LDA #$80
+    // BIT $40
+    let program = vec![
+        0xA9, 0x80, // LDA #$80
+        0x24, 0x40, // BIT $40
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Write a value to zero page address $40
+    cpu.bus.write(0x0040, 0x40); // Write value 0x40 to address $40
+
+    // Execute LDA #$80
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x80);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, true);
+
+    // Execute BIT $40
+    cpu.step();
+
+    // A = 0x80, Memory[$40] = 0x40
+    // A & Memory[$40] = 0x80 & 0x40 = 0x00
+    assert_eq!(cpu.registers.status.zero, true);
+
+    // Negative flag is set to bit 7 of Memory[$40] (0x40)
+    // Bit 7 of 0x40 is 0, so negative flag should be false
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Overflow flag is set to bit 6 of Memory[$40] (0x40)
+    // Bit 6 of 0x40 is 1, so overflow flag should be true
+    assert_eq!(cpu.registers.status.overflow, true);
+}
+
+#[test]
 fn test_clc() {
     // Assemble the program:
     // CLC
