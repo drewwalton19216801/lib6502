@@ -145,3 +145,21 @@ pub fn jmp<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     cpu.registers.pc = addr;
     0
 }
+
+/// Jump to Subroutine
+pub fn jsr<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    let pc = cpu.registers.pc - 1;
+    cpu.stack_push((pc >> 8) as u8);
+    cpu.stack_push((pc & 0xFF) as u8);
+    cpu.registers.pc = addr;
+    0
+}
+
+/// Return from Subroutine
+pub fn rts<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    let lo = cpu.stack_pop();
+    let hi = cpu.stack_pop();
+    let pc = (hi as u16) << 8 | lo as u16;
+    cpu.registers.pc = pc + 1;
+    0
+}

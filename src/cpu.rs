@@ -85,6 +85,19 @@ impl<B: Bus> CPU<B> {
         (hi << 8) | lo
     }
 
+    /// Pushes a byte onto the stack.
+    pub fn stack_push(&mut self, value: u8) {
+        self.registers.sp = self.registers.sp.wrapping_sub(1);
+        self.bus.write(0x0100 | self.registers.sp as u16, value);
+    }
+
+    /// Pops a byte from the stack.
+    pub fn stack_pop(&mut self) -> u8 {
+        let value = self.bus.read(0x0100 | self.registers.sp as u16);
+        self.registers.sp = self.registers.sp.wrapping_add(1);
+        value
+    }
+
     /// Updates the zero and negative flags based on the given result.
     pub fn update_zero_and_negative_flags(&mut self, result: u8) {
         self.registers.status.zero = result == 0;
@@ -170,6 +183,12 @@ impl<B: Bus> CPU<B> {
         // Jump Instructions
         self.map_opcode(0x4C, jmp, absolute, 3); // JMP Absolute
         self.map_opcode(0x6C, jmp, indirect, 5); // JMP Indirect
+
+        // Jump Subroutine Instruction
+        self.map_opcode(0x20, jsr, absolute, 6); // JSR Absolute
+        
+        // Return Instructions
+        self.map_opcode(0x60, rts, implied, 6); // RTS Implied
 
         // Add more instruction mappings here...
     }

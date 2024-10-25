@@ -453,3 +453,132 @@ fn test_jmp_indirect_page_boundary_bug() {
     // Due to the bug, it reads from $1000 instead of $1100
     assert_eq!(cpu.registers.pc, 0x8000);
 }
+
+#[test]
+fn test_jmp_normal() {
+    // Assemble the program:
+    // JMP $8000
+    let program = vec![
+        0x4C, 0x00, 0x80, // JMP $8000
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute JMP $8000
+    cpu.step();
+    assert_eq!(cpu.registers.pc, 0x8000);
+}
+
+#[test]
+fn test_jsr() {
+    // Assemble the program:
+    // LDA #$01
+    // JSR $8005
+    let program = vec![
+        0xA9, 0x01,       // 0x8000: LDA #$01
+        0x20, 0x05, 0x80, // 0x8002: JSR $8005
+        // Subroutine at 0x8005
+        0xA9, 0x02,       // 0x8005: LDA #$02
+        0x60,             // 0x8007: RTS
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDA #$01
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x01);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+    assert_eq!(cpu.registers.pc, 0x8002);
+
+    // Execute JSR $8005
+    cpu.step();
+    assert_eq!(cpu.registers.pc, 0x8005);
+}
+
+#[test]
+fn test_rts() {
+    // Assemble the program:
+    // LDA #$01
+    // JSR $8005
+    // NOP          ; Placeholder for next instruction after subroutine
+    // Subroutine at $8005:
+    // LDA #$02
+    // RTS
+    let program = vec![
+        // Main program
+        0xA9, 0x01,       // 0x8000: LDA #$01
+        0x20, 0x05, 0x80, // 0x8002: JSR $8005
+        0xEA,             // 0x8005: NOP (after JSR)
+        // Subroutine at 0x8005
+        0xA9, 0x02,       // 0x8006: LDA #$02
+        0x60,             // 0x8008: RTS
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDA #$01 (Main program)
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x01);
+    assert_eq!(cpu.registers.status.negative, false);
+    assert_eq!(cpu.registers.pc, 0x8002);
+
+    // Execute JSR $8005
+    cpu.step();
+    assert_eq!(cpu.registers.pc, 0x8005);
+
+    // Execute LDA #$02 (Subroutine)
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x02);
+    assert_eq!(cpu.registers.pc, 0x8007);
+
+    // Execute RTS (Subroutine)
+    cpu.step();
+    assert_eq!(cpu.registers.pc, 0x8005);
+
+    // Execute NOP (Main program resumes)
+    cpu.step();
+    assert_eq!(cpu.registers.pc, 0x8006);
+}
+
+#[test]
+fn test_jsr_rts() {
+    // Corrected program setup
+    let program = vec![
+        // Main program
+        0xA9, 0x01,       // 0x8000: LDA #$01
+        0x20, 0x05, 0x80, // 0x8002: JSR $8005
+        0xEA,             // 0x8005: NOP
+        // Subroutine at 0x8005
+        0xA9, 0x02,       // 0x8006: LDA #$02
+        0x60,             // 0x8008: RTS
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDA #$01 (Main program)
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x01);
+    assert_eq!(cpu.registers.pc, 0x8002);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute JSR $8005
+    cpu.step();
+    assert_eq!(cpu.registers.pc, 0x8005);
+
+    // Execute LDA #$02 (Subroutine)
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x02);
+    assert_eq!(cpu.registers.pc, 0x8007);
+
+    // Execute RTS (Subroutine)
+    cpu.step();
+    // RTS pops return address from stack, increments it by 1, and sets PC
+    // Return address pushed during JSR was 0x8004 (address after JSR - 1)
+    // RTS pops 0x8004, increments to 0x8005, and sets PC to 0x8005
+    assert_eq!(cpu.registers.pc, 0x8005);
+
+    // Execute NOP at 0x8005 (Main program resumes)
+    cpu.step();
+    assert_eq!(cpu.registers.pc, 0x8006);
+}
