@@ -6,12 +6,12 @@ Because I thought it would be fun, I was also inspired by [Ben Eater's excellent
 
 ## Project Status
 
- - [X] 100% legal opcode implementation
+ - [ ] 100% legal opcode implementation
  - [ ] Illegal opcode support
  - [ ] 100% test coverage
  - [ ] Example implementation
  - [ ] Cycle-accurate instructions
-	 - [X] Instruction-level accuracy
+	 - [ ] Instruction-level accuracy
 	 - [ ] Cycle-level accuracy
 
 ## Building
