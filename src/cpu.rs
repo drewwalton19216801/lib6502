@@ -167,6 +167,10 @@ impl<B: Bus> CPU<B> {
         self.map_opcode(0x38, sec, implied, 2); // SEC Implied
         self.map_opcode(0xF8, sed, implied, 2); // SED Implied
 
+        // Jump Instructions
+        self.map_opcode(0x4C, jmp, absolute, 3); // JMP Absolute
+        self.map_opcode(0x6C, jmp, indirect, 5); // JMP Indirect
+
         // Add more instruction mappings here...
     }
 

@@ -140,4 +140,8 @@ pub fn sed<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
     0
 }
 
-// Implement other instructions similarly...
+/// Jump
+pub fn jmp<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    cpu.registers.pc = addr;
+    0
+}
