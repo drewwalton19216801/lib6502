@@ -51,8 +51,18 @@ pub fn implied<B: Bus>(_cpu: &mut CPU<B>) -> (u16, u8) {
 /// Indirect Addressing Mode
 pub fn indirect<B: Bus>(cpu: &mut CPU<B>) -> (u16, u8) {
     let ptr = cpu.fetch_word();
-    let lo = cpu.bus.read(ptr as u16) as u16;
-    let hi = cpu.bus.read(ptr.wrapping_add(1) as u16) as u16;
+
+    let lo = cpu.bus.read(ptr) as u16;
+
+    // Simulate the 6502 page boundary bug
+    let hi_address = if (ptr & 0x00FF) == 0x00FF {
+        ptr & 0xFF00 // Wrap around to the beginning of the same page
+    } else {
+        ptr + 1 // Normal case, increment to the next byte
+    };
+
+    let hi = cpu.bus.read(hi_address) as u16;
+
     let addr = (hi << 8) | lo;
     (addr, 0)
 }

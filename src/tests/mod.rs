@@ -430,3 +430,26 @@ fn test_lda_zero_page_x() {
     assert_eq!(cpu.registers.status.zero, true);
     assert_eq!(cpu.registers.status.negative, false);
 }
+
+#[test]
+fn test_jmp_indirect_page_boundary_bug() {
+    // Assemble a program with JMP ($10FF)
+    let program = vec![
+        0x6C, 0xFF, 0x10, // JMP ($10FF)
+    ];
+
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Set up the indirect address at $10FF
+    // According to the bug, the high byte should be read from $1000, not $1100
+    cpu.bus.write(0x10FF, 0x00); // Low byte
+    cpu.bus.write(0x1000, 0x80); // High byte due to bug (should have been at $1100)
+
+    // Execute JMP ($10FF)
+    cpu.step();
+
+    // The expected target address is $8000, not $8000
+    // Due to the bug, it reads from $1000 instead of $1100
+    assert_eq!(cpu.registers.pc, 0x8000);
+}
