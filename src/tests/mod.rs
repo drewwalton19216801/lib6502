@@ -499,18 +499,19 @@ fn test_jsr() {
 #[test]
 fn test_rts() {
     // Assemble the program:
+    // Main program:
     // LDA #$01
-    // JSR $8005
+    // JSR $8006
     // NOP          ; Placeholder for next instruction after subroutine
-    // Subroutine at $8005:
+    // Subroutine at $8006:
     // LDA #$02
     // RTS
     let program = vec![
         // Main program
         0xA9, 0x01,       // 0x8000: LDA #$01
-        0x20, 0x05, 0x80, // 0x8002: JSR $8005
-        0xEA,             // 0x8005: NOP (after JSR)
-        // Subroutine at 0x8005
+        0x20, 0x06, 0x80, // 0x8002: JSR $8006
+        0xEA,             // 0x8005: NOP (address after JSR)
+        // Subroutine at 0x8006
         0xA9, 0x02,       // 0x8006: LDA #$02
         0x60,             // 0x8008: RTS
     ];
@@ -520,20 +521,23 @@ fn test_rts() {
     // Execute LDA #$01 (Main program)
     cpu.step();
     assert_eq!(cpu.registers.a, 0x01);
+    assert_eq!(cpu.registers.status.zero, false);
     assert_eq!(cpu.registers.status.negative, false);
     assert_eq!(cpu.registers.pc, 0x8002);
 
-    // Execute JSR $8005
+    // Execute JSR $8006
     cpu.step();
-    assert_eq!(cpu.registers.pc, 0x8005);
+    assert_eq!(cpu.registers.pc, 0x8006);
 
     // Execute LDA #$02 (Subroutine)
     cpu.step();
     assert_eq!(cpu.registers.a, 0x02);
-    assert_eq!(cpu.registers.pc, 0x8007);
+    assert_eq!(cpu.registers.pc, 0x8008);
 
     // Execute RTS (Subroutine)
     cpu.step();
+    // Return address was 0x8004 (address after JSR - 1)
+    // RTS increments it by 1, so PC should be 0x8005
     assert_eq!(cpu.registers.pc, 0x8005);
 
     // Execute NOP (Main program resumes)
@@ -547,9 +551,9 @@ fn test_jsr_rts() {
     let program = vec![
         // Main program
         0xA9, 0x01,       // 0x8000: LDA #$01
-        0x20, 0x05, 0x80, // 0x8002: JSR $8005
+        0x20, 0x06, 0x80, // 0x8002: JSR $8006
         0xEA,             // 0x8005: NOP
-        // Subroutine at 0x8005
+        // Subroutine at 0x8006
         0xA9, 0x02,       // 0x8006: LDA #$02
         0x60,             // 0x8008: RTS
     ];
@@ -562,23 +566,21 @@ fn test_jsr_rts() {
     assert_eq!(cpu.registers.pc, 0x8002);
     assert_eq!(cpu.registers.status.negative, false);
 
-    // Execute JSR $8005
+    // Execute JSR $8006
     cpu.step();
-    assert_eq!(cpu.registers.pc, 0x8005);
+    assert_eq!(cpu.registers.pc, 0x8006);
 
     // Execute LDA #$02 (Subroutine)
     cpu.step();
     assert_eq!(cpu.registers.a, 0x02);
-    assert_eq!(cpu.registers.pc, 0x8007);
+    assert_eq!(cpu.registers.pc, 0x8008);
 
     // Execute RTS (Subroutine)
     cpu.step();
-    // RTS pops return address from stack, increments it by 1, and sets PC
-    // Return address pushed during JSR was 0x8004 (address after JSR - 1)
-    // RTS pops 0x8004, increments to 0x8005, and sets PC to 0x8005
+    // Return address was 0x8004, so after incrementing, PC should be 0x8005
     assert_eq!(cpu.registers.pc, 0x8005);
 
-    // Execute NOP at 0x8005 (Main program resumes)
+    // Execute NOP (Main program resumes)
     cpu.step();
     assert_eq!(cpu.registers.pc, 0x8006);
 }

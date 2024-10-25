@@ -128,6 +128,11 @@ pub fn lda<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     0 // No additional cycles
 }
 
+/// No-Operation
+pub fn nop<B: Bus>(_cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    0 // No additional cycles
+}
+
 /// Set Carry Flag
 pub fn sec<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
     cpu.registers.status.carry = true;
@@ -148,9 +153,11 @@ pub fn jmp<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
 
 /// Jump to Subroutine
 pub fn jsr<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let pc = cpu.registers.pc - 1;
-    cpu.stack_push((pc >> 8) as u8);
-    cpu.stack_push((pc & 0xFF) as u8);
+    let pc = cpu.registers.pc.wrapping_sub(1);
+    let hi = (pc >> 8) as u8;
+    let lo = pc as u8;
+    cpu.stack_push(hi);
+    cpu.stack_push(lo);
     cpu.registers.pc = addr;
     0
 }
@@ -160,6 +167,6 @@ pub fn rts<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
     let lo = cpu.stack_pop();
     let hi = cpu.stack_pop();
     let pc = (hi as u16) << 8 | lo as u16;
-    cpu.registers.pc = pc + 1;
+    cpu.registers.pc = pc.wrapping_add(1);
     0
 }

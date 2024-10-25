@@ -86,16 +86,15 @@ impl<B: Bus> CPU<B> {
     }
 
     /// Pushes a byte onto the stack.
-    pub fn stack_push(&mut self, value: u8) {
+    pub fn stack_push(&mut self, data: u8) {
+        self.bus.write(0x0100 + self.registers.sp as u16, data);
         self.registers.sp = self.registers.sp.wrapping_sub(1);
-        self.bus.write(0x0100 | self.registers.sp as u16, value);
     }
 
     /// Pops a byte from the stack.
     pub fn stack_pop(&mut self) -> u8 {
-        let value = self.bus.read(0x0100 | self.registers.sp as u16);
         self.registers.sp = self.registers.sp.wrapping_add(1);
-        value
+        self.bus.read(0x0100 + self.registers.sp as u16)
     }
 
     /// Updates the zero and negative flags based on the given result.
@@ -175,6 +174,9 @@ impl<B: Bus> CPU<B> {
         self.map_opcode(0xB9, lda, absolute_y, 4);    // LDA Absolute,Y (+1 if page crossed)
         self.map_opcode(0xA1, lda, indirect_x, 6);    // LDA Indirect,X
         self.map_opcode(0xB1, lda, indirect_y, 5);    // LDA Indirect,Y (+1 if page crossed)
+
+        // No-op Instructions
+        self.map_opcode(0xEA, nop, implied, 2); // NOP Implied
 
         // Set Status Instructions
         self.map_opcode(0x38, sec, implied, 2); // SEC Implied
