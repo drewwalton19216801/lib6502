@@ -5,31 +5,6 @@ use crate::bus::Bus;
 /// Returns a tuple of the address and an optional additional cycle count.
 pub type AddressingMode<B> = fn(&mut CPU<B>) -> (u16, u8);
 
-/// Immediate Addressing Mode
-pub fn immediate<B: Bus>(cpu: &mut CPU<B>) -> (u16, u8) {
-    let addr = cpu.registers.pc;
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
-    (addr, 0)
-}
-
-/// Implied Addressing Mode (used for instructions that do not require an operand)
-pub fn implied<B: Bus>(_cpu: &mut CPU<B>) -> (u16, u8) {
-    // Implied mode does not use any address or additional cycles
-    (0, 0)
-}
-
-/// Zero Page Addressing Mode
-pub fn zero_page<B: Bus>(cpu: &mut CPU<B>) -> (u16, u8) {
-    let addr = cpu.fetch_byte() as u16;
-    (addr, 0)
-}
-
-/// Zero Page,X Addressing Mode
-pub fn zero_page_x<B: Bus>(cpu: &mut CPU<B>) -> (u16, u8) {
-    let addr = cpu.fetch_byte().wrapping_add(cpu.registers.x) as u16;
-    (addr, 0)
-}
-
 /// Absolute Addressing Mode
 pub fn absolute<B: Bus>(cpu: &mut CPU<B>) -> (u16, u8) {
     let addr = cpu.fetch_word();
@@ -58,6 +33,28 @@ pub fn absolute_y<B: Bus>(cpu: &mut CPU<B>) -> (u16, u8) {
     let additional_cycles = if page_cross { 1 } else { 0 };
 
     (addr, additional_cycles)
+}
+
+/// Immediate Addressing Mode
+pub fn immediate<B: Bus>(cpu: &mut CPU<B>) -> (u16, u8) {
+    let addr = cpu.registers.pc;
+    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    (addr, 0)
+}
+
+/// Implied Addressing Mode (used for instructions that do not require an operand)
+pub fn implied<B: Bus>(_cpu: &mut CPU<B>) -> (u16, u8) {
+    // Implied mode does not use any address or additional cycles
+    (0, 0)
+}
+
+/// Indirect Addressing Mode
+pub fn indirect<B: Bus>(cpu: &mut CPU<B>) -> (u16, u8) {
+    let ptr = cpu.fetch_word();
+    let lo = cpu.bus.read(ptr as u16) as u16;
+    let hi = cpu.bus.read(ptr.wrapping_add(1) as u16) as u16;
+    let addr = (hi << 8) | lo;
+    (addr, 0)
 }
 
 /// Indirect,X Addressing Mode (Indexed Indirect)
@@ -92,4 +89,20 @@ pub fn relative<B: Bus>(cpu: &mut CPU<B>) -> (u16, u8) {
     (addr, 0) // No additional cycles from the addressing mode itself
 }
 
-// Add more addressing modes as needed...
+/// Zero Page Addressing Mode
+pub fn zero_page<B: Bus>(cpu: &mut CPU<B>) -> (u16, u8) {
+    let addr = cpu.fetch_byte() as u16;
+    (addr, 0)
+}
+
+/// Zero Page,X Addressing Mode
+pub fn zero_page_x<B: Bus>(cpu: &mut CPU<B>) -> (u16, u8) {
+    let addr = cpu.fetch_byte().wrapping_add(cpu.registers.x) as u16;
+    (addr, 0)
+}
+
+/// Zero Page,Y Addressing Mode
+pub fn zero_page_y<B: Bus>(cpu: &mut CPU<B>) -> (u16, u8) {
+    let addr = cpu.fetch_byte().wrapping_add(cpu.registers.y) as u16;
+    (addr, 0)
+}
