@@ -108,6 +108,57 @@ pub fn bit<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     0 // No additional cycles
 }
 
+/// Branch if Minus
+pub fn bmi<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    if cpu.registers.status.negative {
+        cpu.branch(addr)
+    } else {
+        0 // No additional cycles if branch not taken
+    }
+}
+
+/// Branch if Not Equal
+pub fn bne<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    if !cpu.registers.status.zero {
+        cpu.branch(addr)
+    } else {
+        0 // No additional cycles if branch not taken
+    }
+}
+
+/// Branch if Positive
+pub fn bpl<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    if !cpu.registers.status.negative {
+        cpu.branch(addr)
+    } else {
+        0 // No additional cycles if branch not taken
+    }
+}
+
+/// Force Interrupt
+pub fn brk<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    cpu.irq(); // Fire an interrupt
+    0
+}
+
+/// Branch if Overflow Clear
+pub fn bvc<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    if !cpu.registers.status.overflow {
+        cpu.branch(addr)
+    } else {
+        0 // No additional cycles if branch not taken
+    }
+}
+
+/// Branch if Overflow Set
+pub fn bvs<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    if cpu.registers.status.overflow {
+        cpu.branch(addr)
+    } else {
+        0 // No additional cycles if branch not taken
+    }
+}
+
 /// Clear Carry Flag
 pub fn clc<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
     cpu.registers.status.carry = false;
@@ -120,28 +171,115 @@ pub fn cld<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
     0
 }
 
-/// Load Accumulator
-pub fn lda<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.registers.a = value;
-    cpu.update_zero_and_negative_flags(cpu.registers.a);
-    0 // No additional cycles
-}
-
-/// No-Operation
-pub fn nop<B: Bus>(_cpu: &mut CPU<B>, _addr: u16) -> u8 {
-    0 // No additional cycles
-}
-
-/// Set Carry Flag
-pub fn sec<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
-    cpu.registers.status.carry = true;
+// Clear Interrupt Disable
+pub fn cli<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    cpu.registers.status.interrupt_disable = false;
     0
 }
 
-/// Set Decimal Flag
-pub fn sed<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
-    cpu.registers.status.decimal_mode = true;
+// Clear Overflow Flag
+pub fn clv<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    cpu.registers.status.overflow = false;
+    0
+}
+
+/// Compare Accumulator
+/// TODO: Implement
+pub fn cmp<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Compare X Register
+/// TODO: Implement
+pub fn cpx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Compare Y Register
+/// TODO: Implement
+pub fn cpy<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Decrement Memory
+/// TODO: Implement
+pub fn dec<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Decrement X Register
+/// TODO: Implement
+pub fn dex<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Decrement Y Register
+/// TODO: Implement
+pub fn dey<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Exclusive OR
+/// TODO: Implement
+pub fn eor<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Increment Memory
+/// TODO: Implement
+pub fn inc<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Increment X Register
+/// TODO: Implement
+pub fn inx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Increment Y Register
+/// TODO: Implement
+pub fn iny<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
     0
 }
 
@@ -162,11 +300,251 @@ pub fn jsr<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     0
 }
 
+/// Load Accumulator
+pub fn lda<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    let value = cpu.bus.read(addr);
+    cpu.registers.a = value;
+    cpu.update_zero_and_negative_flags(cpu.registers.a);
+    0 // No additional cycles
+}
+
+/// Load X Register
+/// TODO: Implement
+pub fn ldx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Load Y Register
+/// TODO: Implement
+pub fn ldy<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Logical Shift Right
+/// TODO: Implement
+pub fn lsr<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// No-Operation
+pub fn nop<B: Bus>(_cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    0 // No additional cycles
+}
+
+/// OR with Accumulator
+/// TODO: Implement
+pub fn ora<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Push Accumulator
+/// TODO: Implement
+pub fn pha<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Push Processor Status
+/// TODO: Implement
+pub fn php<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Pull Accumulator
+/// TODO: Implement
+pub fn pla<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Pull Processor Status
+/// TODO: Implement
+pub fn plp<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Rotate Left
+/// TODO: Implement
+pub fn rol<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Rotate Right
+/// TODO: Implement
+pub fn ror<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Return from Interrupt
+pub fn rti<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    let lo = cpu.stack_pop();
+    let hi = cpu.stack_pop();
+    let pc = (hi as u16) << 8 | lo as u16;
+    cpu.registers.pc = pc;
+    0
+}
+
 /// Return from Subroutine
 pub fn rts<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
     let lo = cpu.stack_pop();
     let hi = cpu.stack_pop();
     let pc = (hi as u16) << 8 | lo as u16;
     cpu.registers.pc = pc.wrapping_add(1);
+    0
+}
+
+/// Subtract with Carry
+/// TODO: Implement
+pub fn sbc<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Set Carry Flag
+pub fn sec<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    cpu.registers.status.carry = true;
+    0
+}
+
+/// Set Decimal Flag
+pub fn sed<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    cpu.registers.status.decimal_mode = true;
+    0
+}
+
+/// Set Interrupt Disable
+pub fn sei<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    cpu.registers.status.interrupt_disable = true;
+    0
+}
+
+/// Store Accumulator
+/// TODO: Implement
+pub fn sta<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Store X Register
+/// TODO: Implement
+pub fn stx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Store Y Register
+/// TODO: Implement
+pub fn sty<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Transfer Accumulator to X
+/// TODO: Implement
+pub fn tax<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Transfer Accumulator to Y
+/// TODO: Implement
+pub fn tay<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Transfer Stack Pointer to X
+/// TODO: Implement
+pub fn tsx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Transfer X to Accumulator
+/// TODO: Implement
+pub fn txa<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Transfer X to Stack Pointer
+/// TODO: Implement
+pub fn txs<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
+    0
+}
+
+/// Transfer Y to Accumulator
+/// TODO: Implement
+pub fn tya<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Get the opcode at the current PC
+    let value = cpu.bus.read(addr);
+
+    cpu.unimplemented_instruction(value);
     0
 }
