@@ -2,6 +2,7 @@
 
 use crate::bus::Bus;
 use crate::cpu::CPU;
+use crate::registers::StatusFlags;
 
 struct TestBus {
     memory: [u8; 0x10000], // 64KB memory
@@ -583,4 +584,111 @@ fn test_jsr_rts() {
     // Execute NOP (Main program resumes)
     cpu.step();
     assert_eq!(cpu.registers.pc, 0x8006);
+}
+
+#[test]
+fn test_irq() {
+    let mut cpu = CPU::new(TestBus::new());
+    cpu.registers.pc = 0x1234;
+    cpu.registers.status = StatusFlags {
+        carry: false,
+        zero: false,
+        interrupt_disable: false,
+        decimal_mode: false,
+        break_mode: false,
+        overflow: false,
+        unused: true,
+        negative: false,
+    };
+    cpu.registers.sp = 0xFF;
+
+    // Set the IRQ vector to point to address 0x2000
+    cpu.bus.write(0xFFFE, 0x00);
+    cpu.bus.write(0xFFFF, 0x20);
+
+    // Trigger IRQ
+    cpu.irq();
+
+    // Check that the PC was pushed onto the stack
+    assert_eq!(cpu.bus.read(0x01FF), 0x12); // High byte of PC
+    assert_eq!(cpu.bus.read(0x01FE), 0x34); // Low byte of PC
+
+    // Check that the status register was pushed onto the stack
+    // Break flag should be cleared, unused flag should be set
+    let status_pushed = cpu.bus.read(0x01FD);
+    assert_eq!(status_pushed & 0x10, 0x00); // B flag cleared
+    assert_eq!(status_pushed & 0x20, 0x20); // U flag set
+
+    // Check that the interrupt disable flag is set
+    assert!(cpu.registers.status.interrupt_disable);
+
+    // Check that the new PC is set from the IRQ vector
+    assert_eq!(cpu.registers.pc, 0x2000);
+
+    // Check that the stack pointer is correctly updated
+    assert_eq!(cpu.registers.sp, 0xFC);
+}
+
+#[test]
+fn test_nmi() {
+    let mut cpu = CPU::new(TestBus::new());
+    cpu.registers.pc = 0x1234;
+    cpu.registers.status = StatusFlags {
+        carry: false,
+        zero: false,
+        interrupt_disable: false, // The state of this flag doesn't affect NMI
+        decimal_mode: false,
+        break_mode: false,
+        overflow: false,
+        unused: true,
+        negative: false,
+    };
+    cpu.registers.sp = 0xFF;
+
+    // Set the NMI vector to point to address 0x3000
+    cpu.bus.write(0xFFFA, 0x00);
+    cpu.bus.write(0xFFFB, 0x30);
+
+    // Trigger NMI
+    cpu.nmi();
+
+    // Check that the PC was pushed onto the stack
+    assert_eq!(cpu.bus.read(0x01FF), 0x12); // High byte of PC
+    assert_eq!(cpu.bus.read(0x01FE), 0x34); // Low byte of PC
+
+    // Check that the status register was pushed onto the stack
+    // Break flag should be cleared, unused flag should be set
+    let status_pushed = cpu.bus.read(0x01FD);
+    assert_eq!(status_pushed & 0x10, 0x00); // B flag cleared
+    assert_eq!(status_pushed & 0x20, 0x20); // U flag set
+
+    // Check that the Interrupt Disable flag is set
+    assert!(cpu.registers.status.interrupt_disable);
+
+    // Check that the new PC is set from the NMI vector
+    assert_eq!(cpu.registers.pc, 0x3000);
+
+    // Check that the stack pointer is correctly updated
+    assert_eq!(cpu.registers.sp, 0xFC);
+}
+
+#[test]
+fn test_irq_with_interrupts_disabled() {
+    let mut cpu = CPU::new(TestBus::new());
+    cpu.registers.pc = 0x1234;
+    cpu.registers.status.interrupt_disable = true;
+    cpu.registers.sp = 0xFF;
+
+    // Set the IRQ vector to point to address 0x2000
+    cpu.bus.write(0xFFFE, 0x00);
+    cpu.bus.write(0xFFFF, 0x20);
+
+    // Trigger IRQ
+    cpu.irq();
+
+    // Check that the PC was not changed
+    assert_eq!(cpu.registers.pc, 0x1234);
+
+    // Check that the stack pointer was not changed
+    assert_eq!(cpu.registers.sp, 0xFF);
 }
