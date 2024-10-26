@@ -5,6 +5,11 @@ use crate::bus::Bus;
 /// Returns a tuple of the address and an optional additional cycle count.
 pub type AddressingMode<B> = fn(&mut CPU<B>) -> (u16, u8);
 
+/// Accumulator Addressing Mode
+pub fn accumulator<B: Bus>(_cpu: &mut CPU<B>) -> (u16, u8) {
+    (0, 0)
+}
+
 /// Absolute Addressing Mode
 pub fn absolute<B: Bus>(cpu: &mut CPU<B>) -> (u16, u8) {
     let addr = cpu.fetch_word();
