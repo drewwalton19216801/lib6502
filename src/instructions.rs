@@ -1132,38 +1132,135 @@ pub fn sty<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     0
 }
 
-pub fn tax<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+/// TAX - Transfer Accumulator to X
+///
+/// This instruction copies the value of the accumulator (A) register to the X
+/// register.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - Unused argument.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
+pub fn tax<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Copy the value of the accumulator to the X register
+    cpu.registers.x = cpu.registers.a;
+    // Update the zero and negative flags based on the X register's value
+    cpu.update_zero_and_negative_flags(cpu.registers.x);
+    // Return 0 additional cycles
     0
 }
 
-pub fn tay<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+/// TAY - Transfer Accumulator to Y
+///
+/// This instruction copies the value of the accumulator (A) register to the Y
+/// register.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - Unused argument.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
+pub fn tay<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Copy the value of the accumulator to the Y register
+    cpu.registers.y = cpu.registers.a;
+    // Update the zero and negative flags based on the Y register's value
+    cpu.update_zero_and_negative_flags(cpu.registers.y);
+    // Return 0 additional cycles
     0
 }
 
-pub fn tsx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+/// TSX - Transfer Stack Pointer to X
+///
+/// This instruction copies the value of the stack pointer register to the X
+/// register.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - Unused argument.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
+pub fn tsx<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Copy the value of the stack pointer to the X register
+    cpu.registers.x = cpu.registers.sp;
+    // Update the zero and negative flags based on the X register's value
+    cpu.update_zero_and_negative_flags(cpu.registers.x);
+    // Return 0 additional cycles
     0
 }
 
-pub fn txa<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+/// TXA - Transfer X to Accumulator
+///
+/// This instruction copies the value of the X register to the accumulator.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - Unused argument.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
+pub fn txa<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Copy the value of the X register to the accumulator
+    cpu.registers.a = cpu.registers.x;
+    // Update the zero and negative flags based on the accumulator's value
+    cpu.update_zero_and_negative_flags(cpu.registers.a);
+    // Return 0 additional cycles
     0
 }
 
-pub fn txs<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+/// TXS - Transfer X to Stack Pointer
+///
+/// This instruction copies the value of the X register to the stack pointer.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - Unused argument.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
+pub fn txs<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Copy the value of the X register to the stack pointer
+    cpu.registers.sp = cpu.registers.x;
+    // Return 0 additional cycles
     0
 }
 
-pub fn tya<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+/// TYA - Transfer Y to Accumulator
+///
+/// This instruction copies the value of the Y register to the accumulator.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - Unused argument.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
+pub fn tya<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Copy the value of the Y register to the accumulator
+    cpu.registers.a = cpu.registers.y;
+    // Update the zero and negative flags based on the accumulator's value
+    cpu.update_zero_and_negative_flags(cpu.registers.a);
+    // Return 0 additional cycles
     0
 }
