@@ -816,9 +816,62 @@ pub fn rts<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
     0
 }
 
+/// SBC - Subtract with Carry
+///
+/// This instruction subtracts the value of the memory at the given address
+/// from the accumulator, taking into account the carry flag. If the decimal
+/// mode flag is set, the instruction subtracts the values as BCD values.
+/// Otherwise it subtracts the values as binary values.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address of the memory to subtract from the accumulator.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
 pub fn sbc<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+    let m = cpu.bus.read(addr);
+    let value = m;
+    let carry = if cpu.registers.status.carry { 1 } else { 0 };
+    let a = cpu.registers.a;
+    if cpu.registers.status.decimal_mode {
+        let mut temp = a as i16 - value as i16 - (1 - carry) as i16;
+        // Set the carry flag if the result is negative
+        cpu.registers.status.carry = temp >= 0;
+        // Set the zero flag if the result is zero
+        cpu.registers.status.zero = (temp & 0xFF) == 0;
+        // Set the negative flag if the result has the high bit set
+        cpu.registers.status.negative = (temp & 0x80) != 0;
+        // Set the overflow flag if the result is negative and the carry flag was set
+        cpu.registers.status.overflow = ((a ^ temp as u8) & (a ^ value) & 0x80) != 0;
+        // If the lower nibble of A is less than the lower nibble of M plus the carry
+        // flag, subtract 6 from the result
+        if (a & 0x0F) < ((value & 0x0F) + (1 - carry as u8)) {
+            temp -= 6;
+        }
+        // If the result is negative, subtract 0x60 from the result
+        if temp < 0 {
+            temp -= 0x60;
+        }
+        // Store the result in A
+        cpu.registers.a = (temp & 0xFF) as u8;
+    } else {
+        let temp = a as u16 - value as u16 - (1 - carry) as u16;
+        // Store the result in A
+        cpu.registers.a = temp as u8;
+        // Set the carry flag if the result is positive (no borrow)
+        cpu.registers.status.carry = temp < 0x100;
+        // Set the zero flag if the result is zero
+        cpu.registers.status.zero = cpu.registers.a == 0;
+        // Set the negative flag if the result has the high bit set
+        cpu.registers.status.negative = (cpu.registers.a & 0x80) != 0;
+        // Set the overflow flag if the result has the high bit set and the carry
+        // flag was set
+        cpu.registers.status.overflow = ((a ^ cpu.registers.a) & (a ^ value) & 0x80) != 0;
+    }
     0
 }
 

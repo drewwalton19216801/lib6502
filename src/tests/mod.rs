@@ -907,3 +907,58 @@ fn test_irq_with_interrupts_disabled() {
     // Check that the stack pointer was not changed
     assert_eq!(cpu.registers.sp, 0xFF);
 }
+
+#[test]
+fn test_sbc_binary_mode() {
+    // Assemble the program: LDA #$50; SBC #$10
+    let program = vec![
+        0xA9, 0x50, // LDA #$50
+        0xE9, 0x10, // SBC #$10
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+
+    // Set the Carry flag (no borrow)
+    cpu.registers.status.carry = true;
+
+    // Execute LDA #$50
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x50);
+
+    // Execute SBC #$10
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x40);
+    assert_eq!(cpu.registers.status.carry, true);  // No borrow needed
+    assert_eq!(cpu.registers.status.zero, false);  // Result is not zero
+    assert_eq!(cpu.registers.status.negative, false); // Result is positive
+    assert_eq!(cpu.registers.status.overflow, false); // No overflow
+}
+
+#[test]
+fn test_sbc_decimal_mode() {
+    // Assemble the program: LDA #$50; SBC #$10
+    let program = vec![
+        0xF8,       // SED (Set Decimal Flag)
+        0xA9, 0x50, // LDA #$50
+        0xE9, 0x10, // SBC #$10
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+
+    // Set the Carry flag (no borrow)
+    cpu.registers.status.carry = true;
+
+    // Execute SED
+    cpu.step();
+    assert!(cpu.registers.status.decimal_mode);
+
+    // Execute LDA #$50
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x50);
+
+    // Execute SBC #$10 in Decimal Mode
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x40);
+    assert_eq!(cpu.registers.status.carry, true);  // No borrow needed
+    assert_eq!(cpu.registers.status.zero, false);  // Result is not zero
+    assert_eq!(cpu.registers.status.negative, false); // Result is positive
+    // Overflow flag is undefined in decimal mode, but your implementation sets it as in binary mode
+}
