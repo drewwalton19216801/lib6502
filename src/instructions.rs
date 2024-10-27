@@ -810,7 +810,7 @@ pub fn ldy<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     0
 }
 
-/// LSR - Logical Shift Right
+/// LSR - Logical Shift Right (Accumulator)
 ///
 /// This instruction shifts the bits in the accumulator one position to the
 /// right. The bit that was shifted out is stored in the carry flag, and the
