@@ -36,7 +36,7 @@ pub struct StatusFlags {
     pub negative: bool,
     /// V flag (bit 6)
     pub overflow: bool,
-    /// B flag (bit 5)
+    /// U flag (bit 5)
     pub unused: bool,
     /// B flag (bit 4)
     pub break_mode: bool,
