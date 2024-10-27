@@ -561,15 +561,47 @@ pub fn dec<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     0
 }
 
-pub fn dex<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+/// DEX - Decrement X Register
+///
+/// This instruction decrements the value in the X register by one. The zero
+/// and negative flags are updated based on the result.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - This argument is unused for this instruction.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by the instruction (always 0).
+pub fn dex<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Subtract 1 from the X register
+    cpu.registers.x = cpu.registers.x.wrapping_sub(1);
+    // Update the zero and negative flags based on the X register's value
+    cpu.update_zero_and_negative_flags(cpu.registers.x);
+    // Return 0 additional cycles
     0
 }
 
-pub fn dey<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+/// DEY - Decrement Y Register
+///
+/// This instruction decrements the value in the Y register by one. The zero
+/// and negative flags are updated based on the result.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - This argument is unused for this instruction.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by the instruction (always 0).
+pub fn dey<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Subtract 1 from the Y register
+    cpu.registers.y = cpu.registers.y.wrapping_sub(1);
+    // Update the zero and negative flags based on the Y register's value
+    cpu.update_zero_and_negative_flags(cpu.registers.y);
+    // Return 0 additional cycles
     0
 }
 

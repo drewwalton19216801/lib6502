@@ -597,6 +597,88 @@ fn test_dec_zero_page_with_ldy() {
 }
 
 #[test]
+fn test_dex_implied() {
+    // Assemble the program:
+    // LDA #$01
+    // LDX #$01
+    // DEX
+    // LDA $00
+    let program = vec![
+        0xA9, 0x01, // LDA #$01
+        0xA2, 0x01, // LDX #$01
+        0xCA, // DEX
+        0xA5, 0x00, // LDA $00
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDA #$01
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x01);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute LDX #$01
+    cpu.step();
+    assert_eq!(cpu.registers.x, 0x01);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute DEX
+    cpu.step();
+    assert_eq!(cpu.registers.x, 0x00);
+    assert_eq!(cpu.registers.status.zero, true);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute LDA $00
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x00);
+    assert_eq!(cpu.registers.status.zero, true);
+    assert_eq!(cpu.registers.status.negative, false);
+}
+
+#[test]
+fn test_dey_implied() {
+    // Assemble the program:
+    // LDA #$01
+    // LDY #$01
+    // DEY
+    // LDA $00
+    let program = vec![
+        0xA9, 0x01, // LDA #$01
+        0xA0, 0x01, // LDY #$01
+        0x88, // DEY
+        0xA5, 0x00, // LDA $00
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDA #$01
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x01);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute LDY #$01
+    cpu.step();
+    assert_eq!(cpu.registers.y, 0x01);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute DEY
+    cpu.step();
+    assert_eq!(cpu.registers.y, 0x00);
+    assert_eq!(cpu.registers.status.zero, true);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute LDA $00
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x00);
+    assert_eq!(cpu.registers.status.zero, true);
+    assert_eq!(cpu.registers.status.negative, false);
+}
+
+#[test]
 fn test_lda_immediate() {
     // Assemble the program:
     // LDA #$80
