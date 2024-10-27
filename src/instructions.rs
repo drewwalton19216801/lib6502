@@ -886,9 +886,28 @@ pub fn nop<B: Bus>(_cpu: &mut CPU<B>, _addr: u16) -> u8 {
     0
 }
 
+/// ORA - Logical Inclusive OR
+///
+/// This instruction performs a bitwise OR operation on the accumulator 
+/// and the value at the given address, storing the result in the accumulator. 
+/// The zero and negative flags are updated based on the result.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to read from.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (always 0).
 pub fn ora<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+    // Read the value from the specified address
+    let m = cpu.bus.read(addr);
+    // Perform OR operation with the accumulator
+    cpu.registers.a |= m;
+    // Update the zero and negative flags based on the result
+    cpu.update_zero_and_negative_flags(cpu.registers.a);
+    // Return 0 additional cycles
     0
 }
 

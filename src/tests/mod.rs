@@ -1266,6 +1266,26 @@ mod instruction_tests {
     }
 
     #[test]
+    fn test_ora() {
+        // Assemble the program: LDA #$50; ORA #$10
+        let program = vec![
+            0xA9, 0x50, // LDA #$50
+            0x09, 0x10, // ORA #$10
+        ];
+        let mut cpu = create_cpu_with_program(&program);
+
+        // Execute LDA #$50
+        cpu.step();
+        assert_eq!(cpu.registers.a, 0x50);
+
+        // Execute ORA #$10
+        cpu.step();
+        assert_eq!(cpu.registers.a, 0x50); // Corrected expected value
+        assert_eq!(cpu.registers.status.zero, false); // Result is not zero
+        assert_eq!(cpu.registers.status.negative, false); // Result is positive
+    }
+
+    #[test]
     fn test_rol_accumulator() {
         // Assemble the program:
         // CLC         ; Clear Carry Flag
