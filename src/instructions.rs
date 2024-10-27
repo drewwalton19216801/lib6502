@@ -812,16 +812,16 @@ pub fn ldy<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
 
 /// LSR - Logical Shift Right
 ///
-/// This instruction shifts the bits in the memory location at the given
-/// address one position to the right. The bit that was shifted out is stored
-/// in the carry flag, and the result is stored back into the memory location.
+/// This instruction shifts the bits in the accumulator one position to the
+/// right. The bit that was shifted out is stored in the carry flag, and the
+/// result is stored back into the accumulator.
 ///
 /// The zero and negative flags are updated based on the result.
 ///
 /// # Arguments
 ///
 /// * `cpu` - A mutable reference to the CPU instance.
-/// * `addr` - The address to read from.
+/// * `addr` - The address to read from (unused for this instruction).
 ///
 /// # Returns
 ///
@@ -1052,9 +1052,11 @@ pub fn sec<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
     0
 }
 
-/// Set Decimal Flag
+/// SED - Set Decimal Mode
 ///
-/// This instruction sets the decimal mode flag to true.
+/// This instruction sets the decimal mode flag to true. In decimal mode, the
+/// 6502 CPU performs arithmetic operations in BCD (Binary Coded Decimal)
+/// format.
 ///
 /// # Returns
 ///
@@ -1067,17 +1069,19 @@ pub fn sed<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
     0
 }
 
-/// Set Interrupt Disable Flag
+/// SEI - Set Interrupt Disable
 ///
-/// This instruction sets the interrupt disable flag to true, preventing the
-/// CPU from responding to interrupts.
+/// This instruction sets the Interrupt Disable flag to true, which prevents
+/// the CPU from responding to interrupts until the flag is cleared.
 ///
 /// # Returns
 ///
 /// The number of additional cycles that the instruction adds to the
 /// instruction's base cycle count (always 0).
 pub fn sei<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Set the Interrupt Disable flag to true
     cpu.registers.status.interrupt_disable = true;
+    // Return 0 additional cycles
     0
 }
 
