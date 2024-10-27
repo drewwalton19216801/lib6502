@@ -449,21 +449,90 @@ pub fn clv<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
     0
 }
 
+/// CMP - Compare Accumulator
+///
+/// This instruction compares the value in the accumulator to the value at the
+/// given address and sets the carry, zero, and negative flags based on the
+/// result.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to read from.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (0).
 pub fn cmp<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+    // Read the value from the given address
+    let m = cpu.bus.read(addr);
+    // Calculate the result of the comparison
+    let result = cpu.registers.a.wrapping_sub(m);
+    // Set the carry flag if a > m
+    cpu.registers.status.carry = cpu.registers.a >= m;
+    // Set the zero flag if a == m
+    cpu.registers.status.zero = cpu.registers.a == m;
+    // Set the negative flag if the result is negative
+    cpu.registers.status.negative = (result & 0x80) != 0;
+    // Return 0 additional cycles
     0
 }
 
+/// CPX - Compare X Register
+///
+/// This instruction compares the value in the X register to the value at the
+/// given address and sets the carry, zero, and negative flags based on the
+/// result.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to read from.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (0).
 pub fn cpx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+    // Read the value from the given address
+    let m = cpu.bus.read(addr);
+    // Calculate the result of the comparison
+    let result = cpu.registers.x.wrapping_sub(m);
+    // Set the carry flag if x >= m
+    cpu.registers.status.carry = cpu.registers.x >= m;
+    // Set the zero flag if x == m
+    cpu.registers.status.zero = cpu.registers.x == m;
+    // Set the negative flag if the result has the high bit set
+    cpu.registers.status.negative = (result & 0x80) != 0;
+    // Return 0 additional cycles
     0
 }
 
+/// CPY - Compare Y Register
+///
+/// This instruction compares the value in the Y register to the value at the
+/// given address and sets the carry, zero, and negative flags based on the
+/// result.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to read from.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (0).
 pub fn cpy<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+    // Read the value from the given address
+    let m = cpu.bus.read(addr);
+    // Calculate the result of the comparison
+    let result = cpu.registers.y.wrapping_sub(m);
+    // Set the carry flag if y >= m
+    cpu.registers.status.carry = cpu.registers.y >= m;
+    // Set the zero flag if y == m
+    cpu.registers.status.zero = cpu.registers.y == m;
+    // Set the negative flag if the result has the high bit set
+    cpu.registers.status.negative = (result & 0x80) != 0;
+    // Return 0 additional cycles
     0
 }
 
@@ -570,15 +639,51 @@ pub fn lda<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     0
 }
 
+/// LDX - Load X Register
+///
+/// This instruction loads a byte from the specified address into the
+/// X register.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to read from.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (always 0).
 pub fn ldx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Read the value from the specified address
     let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+    // Load the value into the X register
+    cpu.registers.x = value;
+    // Update the zero and negative flags based on the X register's value
+    cpu.update_zero_and_negative_flags(value);
+    // Return 0 additional cycles
     0
 }
 
+/// LDY - Load Y Register
+///
+/// This instruction loads a byte from the specified address into the
+/// Y register.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to read from.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (always 0).
 pub fn ldy<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Read the value from the specified address
     let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+    // Load the value into the Y register
+    cpu.registers.y = value;
+    // Update the zero and negative flags based on the Y register's value
+    cpu.update_zero_and_negative_flags(value);
+    // Return 0 additional cycles
     0
 }
 

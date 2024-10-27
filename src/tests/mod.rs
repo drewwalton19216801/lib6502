@@ -421,6 +421,82 @@ fn test_cld() {
 }
 
 #[test]
+fn test_cmp_immediate() {
+    // Assemble the program: LDA #$50; CMP #$40
+    let program = vec![
+        0xA9, 0x50, // LDA #$50
+        0xC9, 0x40, // CMP #$40
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+
+    // Execute LDA #$50
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x50);
+
+    // Execute CMP #$40
+    cpu.step();
+    assert_eq!(cpu.registers.status.carry, true);  // A >= M
+    assert_eq!(cpu.registers.status.zero, false);  // A != M
+    assert_eq!(cpu.registers.status.negative, false); // Result is positive
+
+    // Test when A == M
+    cpu.registers.a = 0x40;
+    cpu.registers.pc = 0x8002; // Reset PC to CMP instruction
+    cpu.step();
+    assert_eq!(cpu.registers.status.carry, true);  // A >= M
+    assert_eq!(cpu.registers.status.zero, true);   // A == M
+    assert_eq!(cpu.registers.status.negative, false); // Result is zero
+
+    // Test when A < M
+    cpu.registers.a = 0x30;
+    cpu.registers.pc = 0x8002; // Reset PC to CMP instruction
+    cpu.step();
+    assert_eq!(cpu.registers.status.carry, false); // A < M
+    assert_eq!(cpu.registers.status.zero, false);  // A != M
+    assert_eq!(cpu.registers.status.negative, true);  // Result is negative
+}
+
+#[test]
+fn test_cpx_immediate() {
+    // Assemble the program: LDX #$50; CPX #$40
+    let program = vec![
+        0xA2, 0x50, // LDX #$50
+        0xE0, 0x40, // CPX #$40
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+
+    // Execute LDX #$50
+    cpu.step();
+    assert_eq!(cpu.registers.x, 0x50);
+
+    // Execute CPX #$40
+    cpu.step();
+    assert_eq!(cpu.registers.status.carry, true);  // X >= M
+    assert_eq!(cpu.registers.status.zero, false);  // X != M
+    assert_eq!(cpu.registers.status.negative, false); // Result is positive
+}
+
+#[test]
+fn test_cpy_immediate() {
+    // Assemble the program: LDY #$50; CPY #$40
+    let program = vec![
+        0xA0, 0x50, // LDY #$50
+        0xC0, 0x40, // CPY #$40
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+
+    // Execute LDY #$50
+    cpu.step();
+    assert_eq!(cpu.registers.y, 0x50);
+
+    // Execute CPY #$40
+    cpu.step();
+    assert_eq!(cpu.registers.status.carry, true);  // Y >= M
+    assert_eq!(cpu.registers.status.zero, false);  // Y != M
+    assert_eq!(cpu.registers.status.negative, false); // Result is positive
+}
+
+#[test]
 fn test_lda_immediate() {
     // Assemble the program:
     // LDA #$80
