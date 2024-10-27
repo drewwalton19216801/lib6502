@@ -429,11 +429,11 @@ impl<B: Bus> CPU<B> {
         self.map_opcode(0xBC, ldy, absolute_x, 4); // LDY Absolute,X (+1 if page crossed)
 
         // LSR (Logical Shift Right) Instructions
-        self.map_opcode(0x4A, lsr, accumulator, 2); // LSR Accumulator
-        self.map_opcode(0x46, lsr, zero_page, 5); // LSR Zero Page
-        self.map_opcode(0x56, lsr, zero_page_x, 6); // LSR Zero Page,X
-        self.map_opcode(0x4E, lsr, absolute, 6); // LSR Absolute
-        self.map_opcode(0x5E, lsr, absolute_x, 7); // LSR Absolute,X
+        self.map_opcode(0x4A, lsr_accumulator, accumulator, 2); // LSR Accumulator
+        self.map_opcode(0x46, lsr_memory, zero_page, 5); // LSR Zero Page
+        self.map_opcode(0x56, lsr_memory, zero_page_x, 6); // LSR Zero Page,X
+        self.map_opcode(0x4E, lsr_memory, absolute, 6); // LSR Absolute
+        self.map_opcode(0x5E, lsr_memory, absolute_x, 7); // LSR Absolute,X
 
         // No-op Instructions
         self.map_opcode(0xEA, nop, implied, 2); // NOP Implied

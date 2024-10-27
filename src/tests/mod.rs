@@ -899,6 +899,61 @@ fn test_lda_zero_page_x() {
 }
 
 #[test]
+fn test_lsr_accumulator() {
+    // Assemble the program:
+    // LDA #$80
+    // LSR A
+    let program = vec![
+        0xA9, 0x80, // LDA #$80
+        0x4A,       // LSR A
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDA #$80
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x80);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, true);
+    // The carry flag is unaffected by LDA, so no assertion needed here
+
+    // Execute LSR A
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x40);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+    assert_eq!(cpu.registers.status.carry, false); // Bit 0 before shift was 0
+}
+
+#[test]
+fn test_lsr_accumulator_with_carry() {
+    // Assemble the program:
+    // LDA #$01
+    // LSR A
+    let program = vec![
+        0xA9, 0x01, // LDA #$01
+        0x4A,       // LSR A
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDA #$01
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x01);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+    // The carry flag is unaffected by LDA, so no assertion needed here
+
+    // Execute LSR A
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x00);
+    assert_eq!(cpu.registers.status.zero, true);   // Result is zero
+    assert_eq!(cpu.registers.status.negative, false);
+    assert_eq!(cpu.registers.status.carry, true);  // Bit 0 before shift was 1
+}
+
+
+#[test]
 fn test_jmp_indirect_page_boundary_bug() {
     // Assemble a program with JMP ($10FF)
     let program = vec![
