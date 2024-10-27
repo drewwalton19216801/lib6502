@@ -679,6 +679,36 @@ fn test_dey_implied() {
 }
 
 #[test]
+fn test_eor_immediate() {
+    // Assemble the program: LDA #$01; EOR #$01; LDA $00
+    let program = vec![
+        0xA9, 0x01, // LDA #$01
+        0x49, 0x01, // EOR #$01
+        0xA5, 0x00, // LDA $00
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDA #$01
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x01);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute EOR #$01
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x00);
+    assert_eq!(cpu.registers.status.zero, true);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute LDA $00
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x00);
+    assert_eq!(cpu.registers.status.zero, true);
+    assert_eq!(cpu.registers.status.negative, false);
+}
+
+#[test]
 fn test_inc_zero_page() {
     // Assemble the program:
     // LDA #$01
