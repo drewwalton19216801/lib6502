@@ -1266,6 +1266,156 @@ mod instruction_tests {
     }
 
     #[test]
+    fn test_rol_accumulator() {
+        // Assemble the program:
+        // CLC         ; Clear Carry Flag
+        // LDA #$80    ; Load A with 0x80
+        // ROL A       ; Rotate A left through Carry
+        let program = vec![
+            0x18, // CLC
+            0xA9, 0x80, // LDA #$80
+            0x2A, // ROL A
+        ];
+        let mut cpu = create_cpu_with_program(&program);
+        cpu.reset();
+
+        // Execute CLC
+        cpu.step();
+        assert_eq!(cpu.registers.status.carry, false);
+
+        // Execute LDA #$80
+        cpu.step();
+        assert_eq!(cpu.registers.a, 0x80);
+        assert_eq!(cpu.registers.status.zero, false);
+        assert_eq!(cpu.registers.status.negative, true);
+
+        // Execute ROL A
+        cpu.step();
+        // Expected result: A = 0x00, Carry = 1 (since bit 7 of A was 1)
+        assert_eq!(cpu.registers.a, 0x00);
+        assert_eq!(cpu.registers.status.carry, true); // Bit 7 was 1
+        assert_eq!(cpu.registers.status.zero, true); // Result is zero
+        assert_eq!(cpu.registers.status.negative, false); // Bit 7 is 0
+    }
+
+    #[test]
+    fn test_rol_memory() {
+        // Assemble the program:
+        // CLC           ; Clear Carry Flag
+        // LDA #$80      ; Load A with 0x80
+        // STA $10       ; Store A into memory address $10
+        // ROL $10       ; Rotate memory at $10 left through Carry
+        // LDA $10       ; Load A with the result from memory
+        let program = vec![
+            0x18, // CLC
+            0xA9, 0x80, // LDA #$80
+            0x85, 0x10, // STA $10
+            0x26, 0x10, // ROL $10
+            0xA5, 0x10, // LDA $10
+        ];
+        let mut cpu = create_cpu_with_program(&program);
+        cpu.reset();
+
+        // Execute CLC
+        cpu.step();
+        assert_eq!(cpu.registers.status.carry, false);
+
+        // Execute LDA #$80
+        cpu.step();
+        assert_eq!(cpu.registers.a, 0x80);
+
+        // Execute STA $10
+        cpu.step();
+        assert_eq!(cpu.bus.read(0x0010), 0x80);
+
+        // Execute ROL $10
+        cpu.step();
+        // Expected memory at $10: 0x00, Carry = 1
+        assert_eq!(cpu.bus.read(0x0010), 0x00);
+        assert_eq!(cpu.registers.status.carry, true); // Bit 7 was 1
+        assert_eq!(cpu.registers.status.zero, true); // Result is zero
+        assert_eq!(cpu.registers.status.negative, false); // Bit 7 is 0
+
+        // Execute LDA $10
+        cpu.step();
+        assert_eq!(cpu.registers.a, 0x00);
+    }
+
+    #[test]
+    fn test_rol_with_carry_set() {
+        // Assemble the program:
+        // SEC           ; Set Carry Flag
+        // LDA #$01      ; Load A with 0x01
+        // ROL A         ; Rotate A left through Carry
+        let program = vec![
+            0x38, // SEC
+            0xA9, 0x01, // LDA #$01
+            0x2A, // ROL A
+        ];
+        let mut cpu = create_cpu_with_program(&program);
+        cpu.reset();
+
+        // Execute SEC
+        cpu.step();
+        assert_eq!(cpu.registers.status.carry, true);
+
+        // Execute LDA #$01
+        cpu.step();
+        assert_eq!(cpu.registers.a, 0x01);
+
+        // Execute ROL A
+        cpu.step();
+        // Expected result: A = 0x03, Carry = 0
+        assert_eq!(cpu.registers.a, 0x03);
+        assert_eq!(cpu.registers.status.carry, false); // Bit 7 was 0
+        assert_eq!(cpu.registers.status.zero, false); // Result is not zero
+        assert_eq!(cpu.registers.status.negative, false); // Bit 7 is 0
+    }
+
+    #[test]
+    fn test_rol_memory_with_carry_set() {
+        // Assemble the program:
+        // SEC           ; Set Carry Flag
+        // LDA #$01      ; Load A with 0x01
+        // STA $10       ; Store A into memory address $10
+        // ROL $10       ; Rotate memory at $10 left through Carry
+        // LDA $10       ; Load A with the result from memory
+        let program = vec![
+            0x38, // SEC
+            0xA9, 0x01, // LDA #$01
+            0x85, 0x10, // STA $10
+            0x26, 0x10, // ROL $10
+            0xA5, 0x10, // LDA $10
+        ];
+        let mut cpu = create_cpu_with_program(&program);
+        cpu.reset();
+
+        // Execute SEC
+        cpu.step();
+        assert_eq!(cpu.registers.status.carry, true);
+
+        // Execute LDA #$01
+        cpu.step();
+        assert_eq!(cpu.registers.a, 0x01);
+
+        // Execute STA $10
+        cpu.step();
+        assert_eq!(cpu.bus.read(0x0010), 0x01);
+
+        // Execute ROL $10
+        cpu.step();
+        // Expected memory at $10: 0x03, Carry = 0
+        assert_eq!(cpu.bus.read(0x0010), 0x03);
+        assert_eq!(cpu.registers.status.carry, false); // Bit 7 was 0
+        assert_eq!(cpu.registers.status.zero, false); // Result is not zero
+        assert_eq!(cpu.registers.status.negative, false); // Bit 7 is 0
+
+        // Execute LDA $10
+        cpu.step();
+        assert_eq!(cpu.registers.a, 0x03);
+    }
+
+    #[test]
     fn test_ror_accumulator() {
         // Assemble the program:
         // CLC         ; Clear Carry Flag

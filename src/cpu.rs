@@ -455,11 +455,11 @@ impl<B: Bus> CPU<B> {
         self.map_opcode(0x28, plp, implied, 4); // PLP Implied
 
         // ROL (Rotate Left) Instructions
-        self.map_opcode(0x2A, rol, accumulator, 2); // ROL Accumulator
-        self.map_opcode(0x26, rol, zero_page, 5); // ROL Zero Page
-        self.map_opcode(0x36, rol, zero_page_x, 6); // ROL Zero Page,X
-        self.map_opcode(0x2E, rol, absolute, 6); // ROL Absolute
-        self.map_opcode(0x3E, rol, absolute_x, 7); // ROL Absolute,X
+        self.map_opcode(0x2A, rol_accumulator, accumulator, 2); // ROL Accumulator
+        self.map_opcode(0x26, rol_memory, zero_page, 5); // ROL Zero Page
+        self.map_opcode(0x36, rol_memory, zero_page_x, 6); // ROL Zero Page,X
+        self.map_opcode(0x2E, rol_memory, absolute, 6); // ROL Absolute
+        self.map_opcode(0x3E, rol_memory, absolute_x, 7); // ROL Absolute,X
 
         // ROR (Rotate Right) Instructions
         self.map_opcode(0x6A, ror_accumulator, accumulator, 2); // ROR Accumulator
