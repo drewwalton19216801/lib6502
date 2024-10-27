@@ -922,9 +922,63 @@ pub fn rol<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     0
 }
 
-pub fn ror<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+/// ROR - Rotate Right
+///
+/// Rotate the contents of the accumulator one position to the right. 
+/// The carry flag is shifted into bit 7 of the result, and bit 0 of 
+/// the result is shifted into the carry flag.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count.
+pub fn ror_accumulator<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Read the accumulator
+    let m = cpu.registers.a;
+    // Save the carry flag
+    let old_carry = if cpu.registers.status.carry { 1 } else { 0 };
+    // Set the carry flag to the value of the low bit of the accumulator
+    cpu.registers.status.carry = (m & 0x01) != 0;
+    // Rotate the accumulator one position to the right, shifting the carry
+    // flag into bit 7 of the result, and shifting bit 0 of the result into
+    // the carry flag.
+    let result = (m >> 1) | (old_carry << 7);
+    // Store the result back into the accumulator
+    cpu.registers.a = result;
+    // Update the zero and negative flags
+    cpu.update_zero_and_negative_flags(result);
+    // Return the additional cycle count
+    0
+}
+
+/// ROR - Rotate Right (Memory)
+///
+/// This instruction rotates the bits in the memory location at the given
+/// address one position to the right. The carry flag is shifted into bit 7 
+/// of the result, and bit 0 of the original value is shifted into the carry flag.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address of the memory location to rotate.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (always 0).
+pub fn ror_memory<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Read the value from the specified address
+    let m = cpu.bus.read(addr);
+    // Save the current carry flag as a bit value
+    let old_carry = if cpu.registers.status.carry { 1 } else { 0 };
+    // Set the carry flag to the value of the least significant bit of the original value
+    cpu.registers.status.carry = (m & 0x01) != 0;
+    // Rotate the value one position to the right, inserting the old carry as the new high bit
+    let result = (m >> 1) | (old_carry << 7);
+    // Write the result back to the specified address
+    cpu.bus.write(addr, result);
+    // Update the zero and negative flags based on the result
+    cpu.update_zero_and_negative_flags(result);
+    // Return 0 additional cycles
     0
 }
 

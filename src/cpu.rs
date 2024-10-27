@@ -462,11 +462,11 @@ impl<B: Bus> CPU<B> {
         self.map_opcode(0x3E, rol, absolute_x, 7); // ROL Absolute,X
 
         // ROR (Rotate Right) Instructions
-        self.map_opcode(0x6A, ror, accumulator, 2); // ROR Accumulator
-        self.map_opcode(0x66, ror, zero_page, 5); // ROR Zero Page
-        self.map_opcode(0x76, ror, zero_page_x, 6); // ROR Zero Page,X
-        self.map_opcode(0x6E, ror, absolute, 6); // ROR Absolute
-        self.map_opcode(0x7E, ror, absolute_x, 7); // ROR Absolute,X
+        self.map_opcode(0x6A, ror_accumulator, accumulator, 2); // ROR Accumulator
+        self.map_opcode(0x66, ror_memory, zero_page, 5); // ROR Zero Page
+        self.map_opcode(0x76, ror_memory, zero_page_x, 6); // ROR Zero Page,X
+        self.map_opcode(0x6E, ror_memory, absolute, 6); // ROR Absolute
+        self.map_opcode(0x7E, ror_memory, absolute_x, 7); // ROR Absolute,X
 
         // Return Instructions
         self.map_opcode(0x40, rti, implied, 6); // RTI Implied
