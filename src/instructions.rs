@@ -611,21 +611,72 @@ pub fn eor<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     0
 }
 
+/// INC - Increment Memory
+///
+/// This instruction increments the value at the given address by one.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to increment.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (always 0).
 pub fn inc<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+    // Read the value from the given address
+    let m = cpu.bus.read(addr);
+    // Increment the value
+    let result = m.wrapping_add(1);
+    // Write the result back to the given address
+    cpu.bus.write(addr, result);
+    // Update the zero and negative flags based on the result
+    cpu.update_zero_and_negative_flags(result);
+    // Return 0 additional cycles
     0
 }
 
-pub fn inx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+/// INX - Increment X Register
+///
+/// This instruction increments the value in the X register by one. The zero
+/// and negative flags are updated based on the result.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - This argument is unused for this instruction.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by the instruction (always 0).
+pub fn inx<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Increment the X register
+    cpu.registers.x = cpu.registers.x.wrapping_add(1);
+    // Update the zero and negative flags based on the X register's value
+    cpu.update_zero_and_negative_flags(cpu.registers.x);
+    // Return 0 additional cycles
     0
 }
 
-pub fn iny<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+/// INY - Increment Y Register
+///
+/// This instruction increments the value in the Y register by one. The zero
+/// and negative flags are updated based on the result.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - This argument is unused for this instruction.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by the instruction (always 0).
+pub fn iny<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Increment the Y register
+    cpu.registers.y = cpu.registers.y.wrapping_add(1);
+    // Update the zero and negative flags based on the Y register's value
+    cpu.update_zero_and_negative_flags(cpu.registers.y);
+    // Return 0 additional cycles
     0
 }
 

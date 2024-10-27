@@ -679,6 +679,145 @@ fn test_dey_implied() {
 }
 
 #[test]
+fn test_inc_zero_page() {
+    // Assemble the program:
+    // LDA #$01
+    // STA $00
+    // INC $00
+    // LDA $00
+    let program = vec![
+        0xA9, 0x01, // LDA #$01
+        0x85, 0x00, // STA $00
+        0xE6, 0x00, // INC $00
+        0xA5, 0x00, // LDA $00
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDA #$01
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x01);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute STA $00
+    cpu.step();
+    assert_eq!(cpu.bus.read(0x00), 0x01);
+
+    // Execute INC $00
+    cpu.step();
+    assert_eq!(cpu.bus.read(0x00), 0x02);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute LDA $00
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x02);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+}
+
+#[test]
+fn test_inx() {
+    // Assemble the program:
+    // LDX #$01
+    // INX
+    let program = vec![
+        0xA2, 0x01, // LDX #$01
+        0xE8,       // INX
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDX #$01
+    cpu.step();
+    assert_eq!(cpu.registers.x, 0x01);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute INX
+    cpu.step();
+    assert_eq!(cpu.registers.x, 0x02);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+}
+
+#[test]
+fn test_inx_overflow() {
+    // Assemble the program:
+    // LDX #$FF
+    // INX
+    let program = vec![
+        0xA2, 0xFF, // LDX #$FF
+        0xE8,       // INX
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDX #$FF
+    cpu.step();
+    assert_eq!(cpu.registers.x, 0xFF);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, true); // Bit 7 is set
+
+    // Execute INX
+    cpu.step();
+    assert_eq!(cpu.registers.x, 0x00); // Overflow to 0x00
+    assert_eq!(cpu.registers.status.zero, true);     // Zero flag set
+    assert_eq!(cpu.registers.status.negative, false); // Negative flag cleared
+}
+
+#[test]
+fn test_iny() {
+    // Assemble the program:
+    // LDY #$01
+    // INY
+    let program = vec![
+        0xA0, 0x01, // LDY #$01
+        0xC8,       // INY
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDY #$01
+    cpu.step();
+    assert_eq!(cpu.registers.y, 0x01);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute INY
+    cpu.step();
+    assert_eq!(cpu.registers.y, 0x02);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, false);
+}
+
+#[test]
+fn test_iny_overflow() {
+    // Assemble the program:
+    // LDY #$FF
+    // INY
+    let program = vec![
+        0xA0, 0xFF, // LDY #$FF
+        0xC8,       // INY
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+    cpu.reset();
+
+    // Execute LDY #$FF
+    cpu.step();
+    assert_eq!(cpu.registers.y, 0xFF);
+    assert_eq!(cpu.registers.status.zero, false);
+    assert_eq!(cpu.registers.status.negative, true); // Bit 7 is set
+
+    // Execute INY
+    cpu.step();
+    assert_eq!(cpu.registers.y, 0x00); // Overflow to 0x00
+    assert_eq!(cpu.registers.status.zero, true);     // Zero flag set
+    assert_eq!(cpu.registers.status.negative, false); // Negative flag cleared
+}
+
+#[test]
 fn test_lda_immediate() {
     // Assemble the program:
     // LDA #$80
