@@ -93,7 +93,7 @@ impl StatusFlags {
     /// The bit positions are:
     /// - 7: N flag
     /// - 6: V flag
-    /// - 5: B flag (always 1)
+    /// - 5: U flag (always 1)
     /// - 4: B flag
     /// - 3: D flag
     /// - 2: I flag
