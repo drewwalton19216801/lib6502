@@ -352,6 +352,45 @@ fn test_bit() {
 }
 
 #[test]
+fn test_brk() {
+    use crate::instructions::brk;
+    let mut cpu = CPU::new(TestBus::new());
+    cpu.registers.pc = 0x1000;
+    cpu.registers.sp = 0xFF;
+    cpu.registers.status = StatusFlags::new();
+    cpu.registers.status.carry = true; // Set some flags
+    cpu.registers.status.zero = false;
+    cpu.registers.status.negative = true;
+
+    // Set the IRQ vector to point to address 0x2000
+    cpu.bus.write(0xFFFE, 0x00);
+    cpu.bus.write(0xFFFF, 0x20);
+
+    // Execute BRK
+    brk(&mut cpu, 0);
+
+    // Check that the PC was incremented by 1 (from 0x1000 to 0x1001)
+    assert_eq!(cpu.registers.pc, 0x2000); // PC should now be 0x2000
+
+    // Check that the PC was pushed onto the stack
+    assert_eq!(cpu.bus.read(0x01FF), 0x10); // High byte of PC (0x1001)
+    assert_eq!(cpu.bus.read(0x01FE), 0x01); // Low byte of PC (0x1001)
+
+    // Check that the status register was pushed onto the stack
+    let status_pushed = cpu.bus.read(0x01FD);
+    assert_eq!(status_pushed & 0x10, 0x10); // B flag set
+    assert_eq!(status_pushed & 0x20, 0x20); // U flag set
+    assert_eq!(status_pushed & 0x01, 0x01); // Carry flag preserved
+    assert_eq!(status_pushed & 0x80, 0x80); // Negative flag preserved
+
+    // Check that the Interrupt Disable flag is set
+    assert!(cpu.registers.status.interrupt_disable);
+
+    // Check that the stack pointer is correctly updated
+    assert_eq!(cpu.registers.sp, 0xFC);
+}
+
+#[test]
 fn test_clc() {
     // Assemble the program:
     // CLC
