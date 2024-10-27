@@ -1,115 +1,214 @@
+//! The `cpu` module contains the implementation of the 6502 CPU emulator.
+
 use crate::addressing_modes::*;
 use crate::bus::Bus;
 use crate::instructions::Instruction;
 use crate::registers::{Registers, StatusFlags};
 use std::collections::HashMap;
 
+/// The `DecodedInstruction` struct holds the decoded instruction and its associated metadata.
 /// Represents a decoded instruction, consisting of an instruction handler, an addressing mode function, and base cycle count.
+///
+/// A decoded instruction is created by the CPU during the decoding phase of the instruction execution cycle.
+/// It is used to execute the instruction later in the execution phase.
+///
+/// The `instruction` field holds a function pointer to the instruction handler function.
+/// The `addressing_mode` field holds a function pointer to the addressing mode function.
+/// The `cycles` field holds the base number of cycles required by the instruction.
+/// This may be increased by additional cycles added by the addressing mode.
 pub struct DecodedInstruction<B: Bus> {
+    /// Instruction handler function
     pub instruction: Instruction<B>,
+    /// Addressing mode function
     pub addressing_mode: AddressingMode<B>,
-    pub cycles: u8, // Base number of cycles for the instruction
+    /// Base number of cycles for the instruction
+    pub cycles: u8,
 }
 
-/// The `CPU` struct represents the 6502 CPU.
-/// It is generic over a type `B` that implements the `Bus` trait.
+/// The `CPU` struct represents the 6502 CPU emulator.
+///
+/// It contains the current state of the CPU, including the registers, the bus, and the instruction table.
+/// The instruction table is used to decode instructions and execute them.
 pub struct CPU<B: Bus> {
+    /// The current state of the CPU registers.
     pub registers: Registers,
+
+    /// The bus used by the CPU to access memory and I/O.
     pub bus: B,
-    cycles: u64, // Total cycles elapsed
+
+    /// The total number of cycles elapsed since the CPU was reset.
+    /// This is used to track the CPU's progress and to handle certain instructions that depend on the cycle count.
+    cycles: u64,
+
+    /// The instruction table is a mapping of opcodes to their associated instruction handlers and addressing modes.
+    /// The instruction table is used to decode instructions and execute them.
     instruction_table: HashMap<u8, DecodedInstruction<B>>,
 }
 
 impl<B: Bus> CPU<B> {
-    /// Creates a new `CPU` instance with the given bus.
+    /// Creates a new instance of the `CPU` with the given bus.
+    ///
+    /// # Arguments
+    ///
+    /// * `bus` - The bus to be used by the CPU for memory and I/O operations.
+    ///
+    /// # Returns
+    ///
+    /// A new `CPU` instance with initialized registers and instruction table.
     pub fn new(bus: B) -> Self {
+        // Initialize the CPU with default register values and the provided bus
         let mut cpu = Self {
-            registers: Registers::new(),
-            bus,
-            cycles: 0,
-            instruction_table: HashMap::new(),
+            registers: Registers::new(), // Create new registers with default values
+            bus,                         // Use the provided bus for memory operations
+            cycles: 0,                   // Initialize cycle count to zero
+            instruction_table: HashMap::new(), // Create an empty instruction table
         };
-        cpu.init_instruction_table();
-        cpu
+        cpu.init_instruction_table(); // Initialize the instruction table with opcodes
+        cpu // Return the initialized CPU instance
     }
 
-    /// Resets the CPU by setting the program counter to the reset vector.
+    /// Resets the CPU to its initial state.
+    ///
+    /// This method is used to initialize the CPU at the start of a program.
+    /// It sets the program counter to the reset vector address, initializes the stack pointer to 0xFD, and clears the
+    /// status flags.
     pub fn reset(&mut self) {
+        // Read the reset vector from the bus
         let lo = self.bus.read(0xFFFC) as u16;
         let hi = self.bus.read(0xFFFD) as u16;
+
+        // Set the program counter to the reset vector address
         self.registers.pc = (hi << 8) | lo;
+
+        // Initialize the stack pointer to 0xFD
         self.registers.sp = 0xFD;
+
+        // Clear the status flags
         self.registers.status = StatusFlags::new();
+
+        // Reset the cycle count to zero
         self.cycles = 0;
     }
 
-    /// Executes one CPU cycle (fetch, decode, execute).
+    /// Executes one instruction cycle.
+    ///
+    /// This method fetches the current opcode from memory, decodes the instruction, and executes it.
+    /// If the instruction is not implemented, it will call the `unimplemented_instruction` method.
     pub fn step(&mut self) {
-        // Fetch
         let opcode = self.fetch_byte();
-
-        // Decode
+        // Get the instruction from the instruction table
         if let Some(decoded_instruction) = self.instruction_table.get(&opcode) {
-            // Copy the function pointers to avoid borrowing issues
+            // Get the instruction and addressing mode from the instruction table
             let instruction = decoded_instruction.instruction;
             let addressing_mode = decoded_instruction.addressing_mode;
             let base_cycles = decoded_instruction.cycles;
 
-            // Get the operand address using the addressing mode
+            // Get the address and additional cycles from the addressing mode
             let (addr, addr_additional_cycles) = addressing_mode(self);
 
-            // Execute the instruction with the operand address
+            // Execute the instruction
             let instr_additional_cycles = instruction(self, addr);
 
-            // Total cycles for this instruction
+            // Calculate the total cycles for this instruction
             let total_cycles = base_cycles + addr_additional_cycles + instr_additional_cycles;
 
-            // Update the CPU cycle count
+            // Increment the CPU cycle count by the total cycles
             self.cycles += total_cycles as u64;
         } else {
+            // If the instruction is not implemented, call the unimplemented_instruction method
             self.unimplemented_instruction(opcode);
         }
     }
 
-    /// Fetches a byte from the current program counter and increments the counter.
+    /// Fetches the next byte from the memory bus and increments the program counter.
+    ///
+    /// This method is used to fetch the next opcode or operand from memory.
+    /// It increments the program counter after fetching the byte.
     pub fn fetch_byte(&mut self) -> u8 {
         let byte = self.bus.read(self.registers.pc);
         self.registers.pc = self.registers.pc.wrapping_add(1);
         byte
     }
 
-    /// Fetches a word (two bytes) from the current program counter.
+    /// Fetches the next word from the memory bus and increments the program counter.
+    ///
+    /// This method is used to fetch the next opcode or operand from memory.
+    /// It increments the program counter after fetching the word.
     pub fn fetch_word(&mut self) -> u16 {
+        // Fetch the low byte
         let lo = self.fetch_byte() as u16;
+        // Fetch the high byte
         let hi = self.fetch_byte() as u16;
+        // Combine the bytes into a 16-bit word
         (hi << 8) | lo
     }
 
     /// Pushes a byte onto the stack.
+    ///
+    /// This method writes a byte to the current stack location in memory
+    /// and then decrements the stack pointer.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - The byte to be pushed onto the stack.
     pub fn stack_push(&mut self, data: u8) {
+        // Write the byte to the stack memory address
         self.bus.write(0x0100 + self.registers.sp as u16, data);
+        // Decrement the stack pointer
         self.registers.sp = self.registers.sp.wrapping_sub(1);
     }
 
     /// Pops a byte from the stack.
+    ///
+    /// This method reads a byte from the current stack location in memory
+    /// and then increments the stack pointer.
+    ///
+    /// # Returns
+    ///
+    /// The byte popped from the stack.
     pub fn stack_pop(&mut self) -> u8 {
+        // Increment the stack pointer
         self.registers.sp = self.registers.sp.wrapping_add(1);
+        // Read the byte from the stack memory address
         self.bus.read(0x0100 + self.registers.sp as u16)
     }
 
-    /// Updates the zero and negative flags based on the given result.
+    /// Updates the zero and negative flags based on the result.
+    ///
+    /// This method sets the zero flag if the result is zero and the negative flag
+    /// if the most significant bit (bit 7) of the result is set.
+    ///
+    /// # Arguments
+    ///
+    /// * `result` - The result to check for zero and negative flags.
     pub fn update_zero_and_negative_flags(&mut self, result: u8) {
+        // Set the zero flag if the result is zero
         self.registers.status.zero = result == 0;
+        // Set the negative flag if bit 7 of the result is set
         self.registers.status.negative = (result & 0x80) != 0;
     }
 
-    /// Executes a branch, returning the number of additional cycles required.
+    /// Branches to the specified address and returns the cycle penalty.
+    ///
+    /// This method updates the program counter to the given address and checks
+    /// if a page boundary was crossed during the branch. If a page boundary
+    /// is crossed, an additional cycle penalty is incurred.
+    ///
+    /// # Arguments
+    ///
+    /// * `addr` - The address to branch to.
+    ///
+    /// # Returns
+    ///
+    /// The cycle penalty incurred by the branch operation (1 or 2).
     pub fn branch(&mut self, addr: u16) -> u8 {
+        // Store the current program counter
         let old_pc = self.registers.pc;
+        // Update the program counter to the new address
         self.registers.pc = addr;
-        // Check if branch crosses a page boundary
+        // Determine if a page boundary was crossed
         let page_cross = (old_pc & 0xFF00) != (addr & 0xFF00);
-        // Branch taken: +1 cycle, +1 more if page crossed
+        // Return the cycle penalty based on page crossing
         if page_cross {
             2
         } else {
@@ -117,53 +216,68 @@ impl<B: Bus> CPU<B> {
         }
     }
 
-    /// Executes an interrupt request
-    pub fn interrupt(&mut self, nmi: bool) {
-        // If IRQs are disabled and the request is not NMI, ignore the IRQ
+    /// Handles an interrupt (IRQ or NMI).
+    ///
+    /// This method will not trigger an interrupt if the Interrupt Disable flag is set
+    /// and the interrupt is not an NMI.
+    ///
+    /// # Arguments
+    ///
+    /// * `nmi` - Whether the interrupt is an NMI (true) or an IRQ (false).
+    fn interrupt(&mut self, nmi: bool) {
         if self.registers.status.interrupt_disable && !nmi {
             return;
         }
-
-        // Push the high byte of the PC to the stack
+        // Push the current program counter onto the stack
         self.stack_push((self.registers.pc >> 8) as u8);
-
-        // Push the low byte of the PC to the stack
         self.stack_push((self.registers.pc & 0xFF) as u8);
-
-        // Modify the status register to clear the B flag and set the U flag
+        // Push the current status register onto the stack
+        // Clear the B flag and set the U flag
         let mut status = self.registers.status.to_byte();
-        status &= !0x10; // Clear the Break flag (bit 4)
-        status |= 0x20; // Set the Unused flag (bit 5)
-
-        // Push the modified status register to the stack
+        status &= !0x10;
+        status |= 0x20;
         self.stack_push(status);
-
-        // Set the interrupt disable flag
+        // Set the Interrupt Disable flag
         self.registers.status.interrupt_disable = true;
-
-        // Load the appropriate interrupt vector into the PC
+        // Read the interrupt vector address from memory
         let vector_address = if nmi { 0xFFFA } else { 0xFFFE };
         let lo = self.bus.read(vector_address) as u16;
         let hi = self.bus.read(vector_address + 1) as u16;
+        // Set the program counter to the vector address
         self.registers.pc = (hi << 8) | lo;
     }
 
-    /// Executes an IRQ
+    /// Handles an interrupt request (IRQ).
+    ///
+    /// This method will not trigger an interrupt if the Interrupt Disable flag is set.
     pub fn irq(&mut self) {
         self.interrupt(false);
     }
 
-    /// Executes an NMI (Non-Maskable Interrupt)
+    /// Handles a non-maskable interrupt (NMI).
+    ///
+    /// This method will trigger an interrupt regardless of the Interrupt Disable flag.
     pub fn nmi(&mut self) {
         self.interrupt(true);
     }
 
-    /// Unimplemented instruction handler
+    /// Panics when an unimplemented opcode is encountered.
+    ///
+    /// This method is called when the emulator encounters an opcode that is not implemented.
+    /// It will panic with an error message indicating the opcode and the current program counter.
+    ///
+    /// # Arguments
+    ///
+    /// * `opcode` - The opcode that was not implemented.
     pub fn unimplemented_instruction(&mut self, opcode: u8) {
         panic!("Unimplemented opcode {:02X} at PC: {:04X}", opcode, self.registers.pc);
     }
 
-    /// Gets the current cycle count.
+    /// Returns the current cycle count.
+    ///
+    /// # Returns
+    ///
+    /// The current cycle count of the CPU.
     pub fn cycles(&self) -> u64 {
         self.cycles
     }

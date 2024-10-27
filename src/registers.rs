@@ -1,11 +1,19 @@
-/// Represents the CPU registers.
+//! The `registers` module defines the CPU registers for the 6502.
+
+/// The `Registers` struct represents the 6502 CPU registers.
 pub struct Registers {
-    pub a: u8,      // Accumulator
-    pub x: u8,      // X Register
-    pub y: u8,      // Y Register
-    pub sp: u8,     // Stack Pointer
-    pub pc: u16,    // Program Counter
-    pub status: StatusFlags, // Status Register
+    /// Accumulator (A)
+    pub a: u8,
+    /// X register
+    pub x: u8,
+    /// Y register
+    pub y: u8,
+    /// Stack pointer
+    pub sp: u8,
+    /// Program counter
+    pub pc: u16,
+    /// Status flags
+    pub status: StatusFlags,
 }
 
 impl Registers {
@@ -22,16 +30,24 @@ impl Registers {
     }
 }
 
-/// Represents the status flags in the status register.
+/// The `StatusFlags` struct represents the status flags for the 6502.
 pub struct StatusFlags {
-    pub negative: bool,         // N Flag
-    pub overflow: bool,         // V Flag
-    pub unused: bool,           // Unused (always set to 1)
-    pub break_mode: bool,       // B Flag
-    pub decimal_mode: bool,     // D Flag
-    pub interrupt_disable: bool,// I Flag
-    pub zero: bool,             // Z Flag
-    pub carry: bool,            // C Flag
+    /// N flag (bit 7)
+    pub negative: bool,
+    /// V flag (bit 6)
+    pub overflow: bool,
+    /// B flag (bit 5)
+    pub unused: bool,
+    /// B flag (bit 4)
+    pub break_mode: bool,
+    /// D flag (bit 3)
+    pub decimal_mode: bool,
+    /// I flag (bit 2)
+    pub interrupt_disable: bool,
+    /// Z flag (bit 1)
+    pub zero: bool,
+    /// C flag (bit 0)
+    pub carry: bool,
 }
 
 impl StatusFlags {
@@ -49,6 +65,15 @@ impl StatusFlags {
         }
     }
 
+    /// Checks if all flags are set to the same value as the given flags.
+    ///
+    /// # Arguments
+    ///
+    /// * `flag`: The flags to compare with.
+    ///
+    /// # Returns
+    ///
+    /// `true` if all flags are set to the same value, `false` otherwise.
     pub fn contains(&self, flag: StatusFlags) -> bool {
         self.negative == flag.negative
             && self.overflow == flag.overflow
@@ -60,7 +85,20 @@ impl StatusFlags {
             && self.carry == flag.carry
     }
 
-    /// Converts the status flags into a byte.
+    /// Converts the flags to a byte.
+    ///
+    /// # Returns
+    ///
+    /// A byte where each bit corresponds to a flag.
+    /// The bit positions are:
+    /// - 7: N flag
+    /// - 6: V flag
+    /// - 5: B flag (always 1)
+    /// - 4: B flag
+    /// - 3: D flag
+    /// - 2: I flag
+    /// - 1: Z flag
+    /// - 0: C flag
     pub fn to_byte(&self) -> u8 {
         (if self.negative { 1 << 7 } else { 0 })
             | (if self.overflow { 1 << 6 } else { 0 })
@@ -72,7 +110,11 @@ impl StatusFlags {
             | (if self.carry { 1 } else { 0 })
     }
 
-    /// Sets the status flags from a byte.
+    /// Sets the flags from a byte.
+    ///
+    /// # Arguments
+    ///
+    /// * `byte`: The byte to read the flags from.
     pub fn from_byte(&mut self, byte: u8) {
         self.negative = byte & (1 << 7) != 0;
         self.overflow = byte & (1 << 6) != 0;

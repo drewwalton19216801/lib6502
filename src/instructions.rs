@@ -1,11 +1,27 @@
+//! The `instructions` module contains the implementation of the 6502 CPU instructions.
+
 use crate::cpu::CPU;
 use crate::bus::Bus;
 
-/// Type alias for an instruction handler function.
-/// Returns any additional cycles the instruction may add.
+/// A type alias for an instruction function.
+///
+/// The function takes a mutable reference to a `CPU` instance and a memory address as arguments,
+/// and returns the number of additional cycles that the instruction adds to the instruction's
+/// base cycle count.
 pub type Instruction<B> = fn(&mut CPU<B>, u16) -> u8;
 
-/// Add with Carry
+/// ADC - Add with Carry
+///
+/// The ADC instruction adds the value of the memory at the given address to the
+/// accumulator, taking into account the carry flag.
+///
+/// If the decimal mode flag is set, the instruction adds the values as BCD
+/// values. Otherwise it adds the values as binary values.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the instruction's
+/// base cycle count.
 pub fn adc<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     let value = cpu.bus.read(addr);
     let a = cpu.registers.a;
@@ -13,19 +29,27 @@ pub fn adc<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     let mut additional_cycles = 0;
 
     if cpu.registers.status.decimal_mode {
-        // BCD (Binary Coded Decimal) Addition
+        // Add the values as BCD values
         let mut al = (a & 0x0F) + (value & 0x0F) + carry_in;
         let mut ah = (a >> 4) + (value >> 4);
 
+        // If the lower nibble is greater than 9, add 6 to carry the value
+        // to the next digit. This is done because the range of the lower nibble
+        // is 0-9, not 0-F.
         if al > 9 {
             al += 6;
         }
 
+        // If the lower nibble is greater than 0xF, add 1 to the higher nibble
+        // and mask the lower nibble to 0-9.
         if al > 0x0F {
             ah += 1;
             al &= 0x0F;
         }
 
+        // If the higher nibble is greater than 9, add 6 to carry the value
+        // to the next digit. This is done because the range of the higher nibble
+        // is 0-9, not 0-F.
         if ah > 9 {
             ah += 6;
         }
@@ -36,13 +60,12 @@ pub fn adc<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
         cpu.registers.status.negative = (result & 0x80) != 0;
         // Note: The overflow flag in decimal mode is undefined on the 6502 and can be ignored
         cpu.registers.a = result;
-        additional_cycles = 1; // Decimal mode adds an extra cycle
+        additional_cycles = 1;
     } else {
-        // Binary Addition
+        // Add the values as binary values
         let sum = (a as u16) + (value as u16) + (carry_in as u16);
         let result = sum as u8;
 
-        // Update flags
         cpu.registers.status.carry = sum > 0xFF;
         cpu.registers.status.zero = result == 0;
         cpu.registers.status.negative = (result & 0x80) != 0;
@@ -53,498 +76,720 @@ pub fn adc<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     additional_cycles
 }
 
-/// AND with Accumulator
+/// AND - Logical AND
+///
+/// Performs a logical AND on the accumulator and the value at the given
+/// address, storing the result in the accumulator.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count.
 pub fn and<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     let value = cpu.bus.read(addr);
     cpu.registers.a &= value;
     cpu.update_zero_and_negative_flags(cpu.registers.a);
-    0 // No additional cycles
+    0
 }
 
-/// Arithmetic Shift Left
+/// ASL - Arithmetic Shift Left
+///
+/// This instruction shifts the bits in the memory location at the given
+/// address one position to the left. The bit that was shifted out is stored
+/// in the carry flag, and the result is stored back into the memory location.
+///
+/// The zero and negative flags are updated based on the result.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count.
 pub fn asl<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Read the value from the specified address
     let value = cpu.bus.read(addr);
+    // Shift the value left by one bit
     let result = value << 1;
+    // Write the result back to the specified address
     cpu.bus.write(addr, result);
+    // Set the carry flag if the high bit of the original value was set
     cpu.registers.status.carry = (value & 0x80) != 0;
+    // Update the zero and negative flags based on the result
     cpu.update_zero_and_negative_flags(result);
-    0 // No additional cycles
+    // Return the additional cycle count (0 in this case)
+    0
 }
 
-/// Branch if Carry Clear
+/// BCC - Branch if Carry Clear
+///
+/// This function checks if the carry flag is clear (i.e., false) and branches 
+/// to the specified address if it is. If the carry flag is set, it does not 
+/// branch and returns 0 additional cycles.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to potentially branch to.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by the branch operation (1 or 2
+/// if a branch is taken and a page boundary is crossed, otherwise 0).
 pub fn bcc<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Check if the carry flag is clear
     if !cpu.registers.status.carry {
+        // Branch to the specified address
         cpu.branch(addr)
     } else {
-        0 // No additional cycles if branch not taken
+        // No branch taken, return 0 additional cycles
+        0
     }
 }
 
-/// Branch if Carry Set
+/// BCS - Branch if Carry Set
+///
+/// This function checks if the carry flag is set and branches to the specified
+/// address if it is. If the carry flag is clear, it does not branch and returns
+/// 0 additional cycles.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to potentially branch to.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by the branch operation (1 or 2
+/// if a branch is taken and a page boundary is crossed, otherwise 0).
 pub fn bcs<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Check if the carry flag is set
     if cpu.registers.status.carry {
+        // Branch to the specified address
         cpu.branch(addr)
     } else {
-        0 // No additional cycles if branch not taken
+        // No branch taken, return 0 additional cycles
+        0
     }
 }
 
-/// Branch if Equal
+/// BEQ - Branch if Equal
+///
+/// This function checks if the zero flag is set and branches to the specified
+/// address if it is. If the zero flag is clear, it does not branch and returns
+/// 0 additional cycles.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to potentially branch to.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by the branch operation (1 or 2
+/// if a branch is taken and a page boundary is crossed, otherwise 0).
 pub fn beq<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Check if the zero flag is set
     if cpu.registers.status.zero {
+        // Branch to the specified address
         cpu.branch(addr)
     } else {
-        0 // No additional cycles if branch not taken
+        // No branch taken, return 0 additional cycles
+        0
     }
 }
 
-/// Bit Test
+/// BIT - Bit Test
+///
+/// This instruction performs a logical AND on the accumulator and the value
+/// at the given address. The result is discarded, and the zero and negative
+/// flags are set based on the result. The overflow flag is set based on the
+/// value at the given address.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to read from.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count.
 pub fn bit<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     let value = cpu.bus.read(addr);
     let result = cpu.registers.a & value;
     cpu.registers.status.zero = result == 0;
     cpu.registers.status.overflow = (value & 0x40) != 0;
     cpu.registers.status.negative = (value & 0x80) != 0;
-    0 // No additional cycles
-}
-
-/// Branch if Minus
-pub fn bmi<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    if cpu.registers.status.negative {
-        cpu.branch(addr)
-    } else {
-        0 // No additional cycles if branch not taken
-    }
-}
-
-/// Branch if Not Equal
-pub fn bne<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    if !cpu.registers.status.zero {
-        cpu.branch(addr)
-    } else {
-        0 // No additional cycles if branch not taken
-    }
-}
-
-/// Branch if Positive
-pub fn bpl<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    if !cpu.registers.status.negative {
-        cpu.branch(addr)
-    } else {
-        0 // No additional cycles if branch not taken
-    }
-}
-
-/// Force Interrupt
-pub fn brk<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
-    cpu.irq(); // Fire an interrupt
     0
 }
 
-/// Branch if Overflow Clear
+/// BMI - Branch if Negative
+///
+/// This function checks if the negative flag is set and branches to the specified
+/// address if it is. If the negative flag is clear, it does not branch and returns
+/// 0 additional cycles.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to potentially branch to.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by the branch operation (1 or 2
+/// if a branch is taken and a page boundary is crossed, otherwise 0).
+pub fn bmi<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Check if the negative flag is set
+    if cpu.registers.status.negative {
+        // Branch to the specified address
+        cpu.branch(addr)
+    } else {
+        // No branch taken, return 0 additional cycles
+        0
+    }
+}
+
+/// BNE - Branch if Not Equal
+///
+/// This function checks if the zero flag is clear and branches to the specified
+/// address if it is. If the zero flag is set, it does not branch and returns
+/// 0 additional cycles.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to potentially branch to.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by the branch operation (1 or 2
+/// if a branch is taken and a page boundary is crossed, otherwise 0).
+pub fn bne<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Check if the zero flag is clear
+    if !cpu.registers.status.zero {
+        // Branch to the specified address
+        cpu.branch(addr)
+    } else {
+        // No branch taken, return 0 additional cycles
+        0
+    }
+}
+
+/// BPL - Branch if Positive
+///
+/// This function checks if the negative flag is clear and branches to the specified
+/// address if it is. If the negative flag is set, it does not branch and returns
+/// 0 additional cycles.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to potentially branch to.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by the branch operation (1 or 2
+/// if a branch is taken and a page boundary is crossed, otherwise 0).
+pub fn bpl<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Check if the negative flag is clear
+    if !cpu.registers.status.negative {
+        // Branch to the specified address
+        cpu.branch(addr)
+    } else {
+        // No branch taken, return 0 additional cycles
+        0
+    }
+}
+
+/// BRK - Force Interrupt
+///
+/// This instruction simulates an interrupt request. It increments the program
+/// counter, pushes the program counter and status register onto the stack,
+/// disables further interrupts, and jumps to the interrupt vector address.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `_addr` - This argument is unused in the BRK instruction.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the instruction's
+/// base cycle count (always 0 for BRK).
+pub fn brk<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Increment the program counter
+    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    
+    // Push the program counter onto the stack (high byte first)
+    cpu.stack_push((cpu.registers.pc >> 8) as u8);
+    cpu.stack_push((cpu.registers.pc & 0xFF) as u8);
+    
+    // Prepare the status register with the B and U flags set
+    let mut status = cpu.registers.status.to_byte();
+    status |= 0x10; // B flag
+    status |= 0x20; // U flag
+    cpu.stack_push(status);
+    
+    // Disable interrupts
+    cpu.registers.status.interrupt_disable = true;
+    
+    // Jump to the interrupt vector address
+    let lo = cpu.bus.read(0xFFFE) as u16;
+    let hi = cpu.bus.read(0xFFFF) as u16;
+    cpu.registers.pc = (hi << 8) | lo;
+    
+    // Return 0 additional cycles
+    0
+}
+
+/// BVC - Branch if Overflow Clear
+///
+/// This function checks if the overflow flag is clear and branches to the
+/// specified address if it is. If the overflow flag is set, it does not branch
+/// and returns 0 additional cycles.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to potentially branch to.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by the branch operation (1 or 2
+/// if a branch is taken and a page boundary is crossed, otherwise 0).
 pub fn bvc<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     if !cpu.registers.status.overflow {
+        // Branch to the specified address
         cpu.branch(addr)
     } else {
-        0 // No additional cycles if branch not taken
+        // No branch taken, return 0 additional cycles
+        0
     }
 }
 
-/// Branch if Overflow Set
+/// BVS - Branch if Overflow Set
+///
+/// This function checks if the overflow flag is set and branches to the
+/// specified address if it is. If the overflow flag is clear, it does not branch
+/// and returns 0 additional cycles.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to potentially branch to.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by the branch operation (1 or 2
+/// if a branch is taken and a page boundary is crossed, otherwise 0).
 pub fn bvs<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     if cpu.registers.status.overflow {
+        // Branch to the specified address
         cpu.branch(addr)
     } else {
-        0 // No additional cycles if branch not taken
+        // No branch taken, return 0 additional cycles
+        0
     }
 }
 
-/// Clear Carry Flag
+/// CLC - Clear Carry Flag
+///
+/// This instruction clears the carry flag.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (0).
 pub fn clc<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Clear the carry flag
     cpu.registers.status.carry = false;
+    // Return 0 additional cycles
     0
 }
 
-/// Clear Decimal Flag
+/// CLD - Clear Decimal Mode
+///
+/// This instruction clears the decimal mode flag.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (0).
 pub fn cld<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Clear the decimal mode flag
     cpu.registers.status.decimal_mode = false;
+    // Return 0 additional cycles
     0
 }
 
-// Clear Interrupt Disable
+/// CLI - Clear Interrupt Disable
+///
+/// This instruction clears the interrupt disable flag.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (0).
 pub fn cli<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Clear the interrupt disable flag
     cpu.registers.status.interrupt_disable = false;
+    // Return 0 additional cycles
     0
 }
 
-// Clear Overflow Flag
+/// CLV - Clear Overflow Flag
+///
+/// This instruction clears the overflow flag.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (0).
 pub fn clv<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Clear the overflow flag
     cpu.registers.status.overflow = false;
+    // Return 0 additional cycles
     0
 }
 
-/// Compare Accumulator
-/// TODO: Implement
 pub fn cmp<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Compare X Register
-/// TODO: Implement
 pub fn cpx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Compare Y Register
-/// TODO: Implement
 pub fn cpy<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Decrement Memory
-/// TODO: Implement
 pub fn dec<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Decrement X Register
-/// TODO: Implement
 pub fn dex<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Decrement Y Register
-/// TODO: Implement
 pub fn dey<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Exclusive OR
-/// TODO: Implement
 pub fn eor<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Increment Memory
-/// TODO: Implement
 pub fn inc<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Increment X Register
-/// TODO: Implement
 pub fn inx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Increment Y Register
-/// TODO: Implement
 pub fn iny<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Jump
+/// JMP - Jump
+///
+/// The JMP instruction sets the program counter to the given address.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the instruction's
+/// base cycle count (always 0).
 pub fn jmp<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Set the program counter to the given address
     cpu.registers.pc = addr;
+    // Return 0 additional cycles
     0
 }
 
-/// Jump to Subroutine
+/// JSR - Jump to Subroutine
+///
+/// The JSR instruction pushes the current program counter onto the stack and
+/// sets the program counter to the given address.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the instruction's
+/// base cycle count (always 0).
 pub fn jsr<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Push the current program counter onto the stack
     let pc = cpu.registers.pc.wrapping_sub(1);
     let hi = (pc >> 8) as u8;
     let lo = pc as u8;
     cpu.stack_push(hi);
     cpu.stack_push(lo);
+    // Set the program counter to the given address
     cpu.registers.pc = addr;
+    // Return 0 additional cycles
     0
 }
 
-/// Load Accumulator
+/// LDA - Load Accumulator
+///
+/// This instruction loads a byte from the specified address into the
+/// accumulator (A) register.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to read from.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (always 0).
 pub fn lda<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
+    // Read the value from the specified address
     let value = cpu.bus.read(addr);
+    // Load the value into the accumulator
     cpu.registers.a = value;
+    // Update the zero and negative flags based on the accumulator's value
     cpu.update_zero_and_negative_flags(cpu.registers.a);
-    0 // No additional cycles
+    // Return 0 additional cycles
+    0
 }
 
-/// Load X Register
-/// TODO: Implement
 pub fn ldx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Load Y Register
-/// TODO: Implement
 pub fn ldy<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Logical Shift Right
-/// TODO: Implement
 pub fn lsr<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// No-Operation
+/// NOP - No Operation
+///
+/// This instruction performs no operation and is used to introduce a small delay.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (always 0).
 pub fn nop<B: Bus>(_cpu: &mut CPU<B>, _addr: u16) -> u8 {
-    0 // No additional cycles
+    // No operation is performed
+    0
 }
 
-/// OR with Accumulator
-/// TODO: Implement
 pub fn ora<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Push Accumulator
-/// TODO: Implement
 pub fn pha<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Push Processor Status
-/// TODO: Implement
 pub fn php<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Pull Accumulator
-/// TODO: Implement
 pub fn pla<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Pull Processor Status
-/// TODO: Implement
 pub fn plp<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Rotate Left
-/// TODO: Implement
 pub fn rol<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Rotate Right
-/// TODO: Implement
 pub fn ror<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Return from Interrupt
+/// RTI - Return from Interrupt
+///
+/// This instruction is used to return from an interrupt handler. It restores
+/// the program counter and the status register from the stack.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
 pub fn rti<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Pop the status register from the stack
+    let status = cpu.stack_pop();
+    // Restore the status flags from the popped value
+    cpu.registers.status.from_byte(status);
+
+    // Pop the low and high bytes of the program counter from the stack
     let lo = cpu.stack_pop();
     let hi = cpu.stack_pop();
-    let pc = (hi as u16) << 8 | lo as u16;
+    // Combine the low and high bytes to form the program counter
+    let pc = (hi as u16) << 8 | (lo as u16);
+    // Set the program counter to the restored value
     cpu.registers.pc = pc;
+    
+    // Return 0 additional cycles
     0
 }
 
-/// Return from Subroutine
+/// RTS - Return from Subroutine
+///
+/// This instruction is used to return from a subroutine. It increments the
+/// program counter by one and returns the program counter to the value on the
+/// stack.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
 pub fn rts<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Pop the low and high bytes of the program counter from the stack
     let lo = cpu.stack_pop();
     let hi = cpu.stack_pop();
+    // Combine the low and high bytes to form the program counter
     let pc = (hi as u16) << 8 | lo as u16;
+    // Increment the program counter by one
     cpu.registers.pc = pc.wrapping_add(1);
+    
+    // Return 0 additional cycles
     0
 }
 
-/// Subtract with Carry
-/// TODO: Implement
 pub fn sbc<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Set Carry Flag
+/// SEC - Set Carry Flag
+///
+/// This instruction sets the carry flag to true.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
 pub fn sec<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Set the carry flag to true
     cpu.registers.status.carry = true;
+    // Return 0 additional cycles
     0
 }
 
 /// Set Decimal Flag
+///
+/// This instruction sets the decimal mode flag to true.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
 pub fn sed<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
+    // Set the decimal mode flag to true
     cpu.registers.status.decimal_mode = true;
+    // Return 0 additional cycles
     0
 }
 
-/// Set Interrupt Disable
+/// Set Interrupt Disable Flag
+///
+/// This instruction sets the interrupt disable flag to true, preventing the
+/// CPU from responding to interrupts.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
 pub fn sei<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
     cpu.registers.status.interrupt_disable = true;
     0
 }
 
-/// Store Accumulator
-/// TODO: Implement
 pub fn sta<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Store X Register
-/// TODO: Implement
 pub fn stx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Store Y Register
-/// TODO: Implement
 pub fn sty<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Transfer Accumulator to X
-/// TODO: Implement
 pub fn tax<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Transfer Accumulator to Y
-/// TODO: Implement
 pub fn tay<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Transfer Stack Pointer to X
-/// TODO: Implement
 pub fn tsx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Transfer X to Accumulator
-/// TODO: Implement
 pub fn txa<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Transfer X to Stack Pointer
-/// TODO: Implement
 pub fn txs<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
 
-/// Transfer Y to Accumulator
-/// TODO: Implement
 pub fn tya<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    // Get the opcode at the current PC
     let value = cpu.bus.read(addr);
-
     cpu.unimplemented_instruction(value);
     0
 }
