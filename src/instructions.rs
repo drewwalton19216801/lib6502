@@ -1,4 +1,6 @@
 //! The `instructions` module contains the implementation of the 6502 CPU instructions.
+//! 
+//! Unimplemented instructions are intentionally left undocumented.
 
 use crate::cpu::CPU;
 use crate::bus::Bus;
