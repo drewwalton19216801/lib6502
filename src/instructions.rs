@@ -536,9 +536,28 @@ pub fn cpy<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
     0
 }
 
+/// DEC - Decrement Memory
+///
+/// This instruction decrements the value at the given address.
+///
+/// # Arguments
+///
+/// * `cpu` - A mutable reference to the CPU instance.
+/// * `addr` - The address to decrement.
+///
+/// # Returns
+///
+/// The number of additional cycles incurred by this instruction (0).
 pub fn dec<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+    // Read the value from the given address
+    let m = cpu.bus.read(addr);
+    // Decrement the value
+    let result = m.wrapping_sub(1);
+    // Write the result back to the given address
+    cpu.bus.write(addr, result);
+    // Update the zero and negative flags
+    cpu.update_zero_and_negative_flags(result);
+    // Return 0 additional cycles
     0
 }
 
@@ -847,21 +866,50 @@ pub fn sei<B: Bus>(cpu: &mut CPU<B>, _addr: u16) -> u8 {
     0
 }
 
+/// STA - Store Accumulator
+///
+/// This instruction stores the value of the accumulator (A) register at the
+/// given address.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
 pub fn sta<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+    // Store the value of the accumulator at the given address
+    cpu.bus.write(addr, cpu.registers.a);
+    // Return 0 additional cycles
     0
 }
 
+/// STA - Store Accumulator
+///
+/// This instruction stores the value of the accumulator (A) register at the
+/// given address.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
 pub fn stx<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+    // Store the value of the X register at the given address
+    cpu.bus.write(addr, cpu.registers.x);
+    // Return 0 additional cycles
     0
 }
 
+/// STY - Store Y Register
+///
+/// This instruction stores the value of the Y register at the given address.
+///
+/// # Returns
+///
+/// The number of additional cycles that the instruction adds to the
+/// instruction's base cycle count (always 0).
 pub fn sty<B: Bus>(cpu: &mut CPU<B>, addr: u16) -> u8 {
-    let value = cpu.bus.read(addr);
-    cpu.unimplemented_instruction(value);
+    // Store the value of the Y register at the given address
+    cpu.bus.write(addr, cpu.registers.y);
+    // Return 0 additional cycles
     0
 }
 

@@ -497,6 +497,106 @@ fn test_cpy_immediate() {
 }
 
 #[test]
+fn test_dec_zero_page() {
+    // Assemble the program: LDA #$01; STA $10; DEC $10; LDA $10
+    let program = vec![
+        0xA9, 0x01, // LDA #$01
+        0x85, 0x10, // STA $10
+        0xC6, 0x10, // DEC $10
+        0xA5, 0x10, // LDA $10
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+
+    // Execute LDA #$01
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x01);
+
+    // Execute STA $10
+    cpu.step();
+    assert_eq!(cpu.bus.read(0x0010), 0x01);
+
+    // Execute DEC $10
+    cpu.step();
+    assert_eq!(cpu.bus.read(0x0010), 0x00);
+    assert_eq!(cpu.registers.status.zero, true);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute LDA $10
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x00);
+}
+
+#[test]
+fn test_dec_zero_page_with_ldx() {
+    // Assemble the program: LDA #$01; LDX #$01; STA $10; DEC $10; LDA $10
+    let program = vec![
+        0xA9, 0x01, // LDA #$01
+        0xA2, 0x01, // LDX #$01
+        0x85, 0x10, // STA $10
+        0xC6, 0x10, // DEC $10
+        0xA5, 0x10, // LDA $10
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+
+    // Execute LDA #$01
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x01);
+
+    // Execute LDX #$01
+    cpu.step();
+    assert_eq!(cpu.registers.x, 0x01);
+
+    // Execute STA $10
+    cpu.step();
+    assert_eq!(cpu.bus.read(0x0010), 0x01);
+
+    // Execute DEC $10
+    cpu.step();
+    assert_eq!(cpu.bus.read(0x0010), 0x00);
+    assert_eq!(cpu.registers.status.zero, true);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute LDA $10
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x00);
+}
+
+#[test]
+fn test_dec_zero_page_with_ldy() {
+    // Assemble the program: LDA #$01; LDY #$01; STA $10; DEC $10; LDA $10
+    let program = vec![
+        0xA9, 0x01, // LDA #$01
+        0xA0, 0x01, // LDY #$01
+        0x85, 0x10, // STA $10
+        0xC6, 0x10, // DEC $10
+        0xA5, 0x10, // LDA $10
+    ];
+    let mut cpu = create_cpu_with_program(&program);
+
+    // Execute LDA #$01
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x01);
+
+    // Execute LDY #$01
+    cpu.step();
+    assert_eq!(cpu.registers.y, 0x01);
+
+    // Execute STA $10
+    cpu.step();
+    assert_eq!(cpu.bus.read(0x0010), 0x01);
+
+    // Execute DEC $10
+    cpu.step();
+    assert_eq!(cpu.bus.read(0x0010), 0x00);
+    assert_eq!(cpu.registers.status.zero, true);
+    assert_eq!(cpu.registers.status.negative, false);
+
+    // Execute LDA $10
+    cpu.step();
+    assert_eq!(cpu.registers.a, 0x00);
+}
+
+#[test]
 fn test_lda_immediate() {
     // Assemble the program:
     // LDA #$80
